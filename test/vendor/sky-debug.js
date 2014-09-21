@@ -504,7 +504,7 @@ function getCurrentScript() {
 		}
 	}
 
-	nodes = doc.scripts || doc.getElementsByTagName('script');
+	nodes = (loaded ? doc : head).getElementsByTagName('script');
 
 	for (i = nodes.length - 1; i >= 0; i--) {
 		node = nodes[i];

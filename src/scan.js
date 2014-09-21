@@ -8,10 +8,12 @@ scan.init = function(node) {
 	this[0] = node;
 }
 
-scan.init.prototype = scan.prototype = {
-	collect: function() {
+scan.fn = scan.init.prototype = scan.prototype = inherit($.fn);
+
+extend(scan.fn, {
+	collect: function(base) {
 		var self = this;
-		walkTheDOM(this[0], function(node) {
+		walkTheDOM(base ? base : this[0], function(node) {
 			return self.getAttr(node);
 		});
 		return this;
@@ -48,7 +50,7 @@ scan.init.prototype = scan.prototype = {
 
 		if (noscan !== undefined) return true;
 	}
-};
+});
 
 function walkTheDOM(node, func) {
 	if (func(node)) return;
