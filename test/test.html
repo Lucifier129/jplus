@@ -14,8 +14,8 @@ p { font-family: 'microsoft yahei'; font-size: 14px; margin:8px 0;}
 </head>
 
 <body js="css-textAlign: center">
-	<h1 js="text: title; css-color: red"></h1>
-	<h2 js="text: author "></h2>
+	<h1 js="text: theTitle; css-color: red"></h1>
+	<h2 js="text: name "></h2>
 	<p js="text: paragraph "></p>
 	<p js="paragraph "></p>
 	<p js="paragraph "></p>
@@ -24,7 +24,7 @@ p { font-family: 'microsoft yahei'; font-size: 14px; margin:8px 0;}
 	<p js="paragraph "></p>
 	<p js="paragraph "></p>
 	<p js="paragraph ; func"></p>
-	<div js="append: tpl; refresh: data;"></div>
+	<div js="append: tpl; refresh: theText;"></div>
 
 <script type="text/javascript" src="vendor/sky-debug.js"></script>
 <script type="text/javascript" src="vendor/jquery-1.7.2.min.js"></script>
@@ -35,16 +35,22 @@ p { font-family: 'microsoft yahei'; font-size: 14px; margin:8px 0;}
 		alias: {
 			'data': '../test/data.js'
 		},
-		debug:true
+		debug: true
 	};
 
-	module.imports = ['data', function(data) {
-		$('body').refresh(data[0]);
-		setTimeout(function() {
-			$('body').refresh(data[1]);
-		}, 1000)
-	}];
+	module.imports = ['data',
+		function(data) {
+			var model = $.observe(data[0]).on(function(key, value) {
+				var o = {};
+				o[key] = value;
+				$('body').refresh(o);
+			}).extend(data[0]);
 
+		setTimeout(function() {
+			model.extend(data[1]);
+		}, 1000)
+		}
+	];
 </script>
 </body>
 </html>

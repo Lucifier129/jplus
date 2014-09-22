@@ -8,12 +8,10 @@ scan.init = function(node) {
 	this[0] = node;
 }
 
-scan.fn = scan.init.prototype = scan.prototype = inherit($.fn);
-
-extend(scan.fn, {
+scan.fn = scan.init.prototype = scan.prototype = extend(inherit($.fn), {
 	collect: function(base) {
 		var self = this;
-		walkTheDOM(base ? base : this[0], function(node) {
+		walkTheDOM(base || this[0], function(node) {
 			return self.getAttr(node);
 		});
 		return this;
@@ -39,7 +37,7 @@ extend(scan.fn, {
 
 		if (jsAttrValue) {
 			each(parseJsAttr(jsAttrValue), function(prop) {
-				var instance = self[prop];
+				var instance = self.hasOwnProperty(prop) && self[prop];
 				if (!instance) {
 					instance = self[prop] = instantiation();
 					extend(instance, this);
@@ -47,7 +45,6 @@ extend(scan.fn, {
 				instance[instance.length++] = node;
 			});
 		}
-
 		if (noscan !== undefined) return true;
 	}
 });
@@ -71,10 +68,10 @@ function instantiation() {
 	return obj;
 }
 
-$.fn.scan = function(rescan) {
+$.fn.getVM = function(rescan) {
 	var vmodel;
 	if (rescan || !(vmodel = this.data('vmodel'))) {
 		vmodel = this.data('vmodel', scan(this[0]).collect()).data('vmodel');
 	}
-	return vmodel
+	return vmodel;
 };

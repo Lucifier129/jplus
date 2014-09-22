@@ -21,8 +21,7 @@ function isMultipleArgs(arr) {
 
 $.fn.refresh = function(model) {
 	var self = this,
-		vmodel = self.scan();
-
+		vmodel = self.getVM();
 	each(model, function(prop, value) {
 		if (!(prop in vmodel)) return;
 		var target = vmodel[prop],
@@ -57,6 +56,6 @@ $.fn.refresh = function(model) {
 					method.apply($(this), multiple ? args[i] : args);
 				});
 		}
-
+		return this;
 	});
 }

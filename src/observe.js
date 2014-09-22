@@ -1,15 +1,19 @@
 //observe.js
 
-var head = document.getElementsByTagName('head')[0],
+var doc = document,
+    head = doc.getElementsByTagName('head')[0],
+    comment = doc.createComment('Kill IE'),
     NATIVE_RE = /\[native code\]/,
     defineSetter,
-    observeProp;
+    observeProp,
+    ES5;
 
 function randomStr() {
     return Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
 }
 
-if (NATIVE_RE.test(Object.defineProperty)) {
+if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
+    ES5 = true;
     defineSetter = function(obj, propName, setter) {
         var value = obj[propName] || 'undefined';
         delete obj[propName];
@@ -17,13 +21,14 @@ if (NATIVE_RE.test(Object.defineProperty)) {
             get: function() {
                 return value;
             },
-            setter: function(v) {
+            set: function(v) {
                 value = v;
                 setter.call(this, propName, v);
             }
         });
-    }
+    };
 } else if (NATIVE_RE.test(Object.prototype.__defineSetter__)) {
+    ES5 = true;
     defineSetter = function(obj, propName, setter) {
         var value = obj[propName] || 'undefined';
         delete obj[propName];
@@ -34,24 +39,22 @@ if (NATIVE_RE.test(Object.defineProperty)) {
             value = v;
             setter.call(this, propName, v);
         });
-    }
+    };
 } else if ('onpropertychange' in head) {
     defineSetter = function(obj, propName, setter) {
         if (!obj.onpropertychange) {
             obj.onpropertychange = function(e) {
                 var attrName = (e || window.event).propertyName;
-                attrName in obj.__setters__ && setter.call(this, attrName, this[attrName]);
+                attrName in this.__setters__ && setter.call(this, attrName, this[attrName]);
             }
         }
-    }
+    };
 }
-
 
 observeProp = function(obj, propName, setter) {
     var name = propName.split('.');
     propName = name[0];
     name = name[1];
-
     if (!(propName in obj.__setters__)) {
         obj.__setters__[propName] = {};
         defineSetter(obj, propName, function(key, value) {
@@ -65,23 +68,36 @@ observeProp = function(obj, propName, setter) {
     return obj;
 }
 
+function checkPropName(propName) {
+    if ($.ES5) {
+        return true;
+    }
+    if (propName in comment) {
+        throw new Error('If you want to support IE6/7/8. The property name [' + propName + '] can not be observed, because DOM has the same property name. You can use the [jQuery.ES5 = true] to ignore IE6/7/8.');
+    } else {
+        return true;
+    }
+}
+
 var observeProto = {
     on: function() {
         var self = this,
-            args = slice.call(arguments);
+            args = slice.call(arguments),
+            key;
 
-        if (args.length === 1 && isObject(args[0])) {
-            if (isObject(args[0])) {
-                each(args[0], function(propName, setter) {
-                    observeProp(self, propName, setter);
+        if (args.length === 1) {
+            args = args[0];
+            if (isObject(args)) {
+                each(args, function(propName, setter) {
+                    checkPropName(propName) && observeProp(self, propName, setter);
                 });
-            } else if (isFunction(args[0])) {
-                for (var key in self) {
-                    self.hasOwnProperty(key) && key !== '__setters__' && observeProp(self, key, args[0]);
+            } else if (isFunction(args)) {
+                for (key in self.__oldValue__) {
+                    self.__oldValue__.hasOwnProperty(key) && checkPropName(key) && observeProp(self, key, args);
                 }
             }
         } else if (args.length === 2 && isString(args[0]) && isFunction(args[1])) {
-            observeProp(self, args[0], args[1]);
+            checkPropName(args[0]) && observeProp(self, args[0], args[1]);
         }
 
         return this;
@@ -111,8 +127,35 @@ var observeProto = {
                 } else if (this in self.__setters__) {
                     delete self.__setters__[this];
                 }
-           });
+            });
         }
         return this;
+    },
+    each: function(callback) {
+        var obj = this.__oldValue__;
+        for (var key in obj) {
+            callback.call(this, key, this[key]);
+        }
+        return this;
+    },
+    extend: function() {
+        var self = this,
+            args = slice.call(arguments);
+        extend.apply(null, [this.__oldValue__].concat(args));
+        extend.apply(null, [this].concat(args));
+        return this;
     }
-}
+};
+
+
+$.observe = ES5 ? function(obj) {
+    var ret = inherit(observeProto);
+    ret.__setters__ = {};
+    ret.__oldValue__ = extend(true, {}, obj);
+    return extend(ret, obj);
+} : function(obj) {
+    var ret = head.appendChild(doc.createComment('[object Object]'));
+    ret.__setters__ = {};
+    ret.__oldValue__ = extend(true, {}, obj);
+    return extend(ret, observeProto, obj);
+};
