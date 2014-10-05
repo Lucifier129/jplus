@@ -1,5 +1,4 @@
 //observe.js
-
 var doc = document,
     head = doc.getElementsByTagName('head')[0],
     comment = doc.createComment('Kill IE'),
@@ -8,6 +7,10 @@ var doc = document,
     observeProp,
     ES5;
 
+function nextTick(fn) {
+    return setTimeout(fn, 4);
+}
+
 function randomStr() {
     return Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
 }
@@ -15,7 +18,13 @@ function randomStr() {
 if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
     ES5 = true;
     defineSetter = function(obj, propName, setter) {
-        var value = obj[propName] || 'undefined';
+        var value = obj[propName] || 'undefined',
+            status = true;
+        function trigger() {
+            setter.call(obj, value, propName, obj.__oldValues__[propName]);
+            obj.__oldValues__[propName] = value;
+            status = true;
+        }
         delete obj[propName];
         Object.defineProperty(obj, propName, {
             get: function() {
@@ -23,30 +32,57 @@ if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
             },
             set: function(v) {
                 value = v;
-                setter.call(this, propName, v);
+                if (status) {
+                    status = false;
+                    nextTick(trigger);
+                }
             }
         });
     };
 } else if (NATIVE_RE.test(Object.prototype.__defineSetter__)) {
     ES5 = true;
     defineSetter = function(obj, propName, setter) {
-        var value = obj[propName] || 'undefined';
-        delete obj[propName];
+        var value = obj[propName] || 'undefined',
+            status = true;
+
+        function trigger() {
+            setter.call(obj, value, propName, obj.__oldValues__[propName]);
+            obj.__oldValues__[propName] = value;
+            status = true;
+        }
         Object.prototype.__defineGetter__.call(obj, propName, function() {
             return value;
         });
-        Object.prototype.__defineSetter__.call(obj.propName, function(v) {
+        Object.prototype.__defineSetter__.call(obj, propName, function(v) {
             value = v;
-            setter.call(this, propName, v);
+            if (status) {
+                status = false;
+                nextTick(trigger);
+            }
         });
     };
 } else if ('onpropertychange' in head) {
     defineSetter = function(obj, propName, setter) {
+        var status;
         if (!obj.onpropertychange) {
+            status = {};
             obj.onpropertychange = function(e) {
-                var attrName = (e || window.event).propertyName;
-                attrName in this.__setters__ && setter.call(this, attrName, this[attrName]);
-            }
+                var self = this,
+                    attrName = (e || window.event).propertyName;
+                if (attrName in this.__setters__) {
+                    if (status[attrName] === undefined) {
+                        status[attrName] = true;
+                    }
+                    if (status[attrName]) {
+                        status[attrName] = false;
+                        nextTick(function() {
+                            setter.call(self, self[attrName], attrName, self.__oldValues__[attrName]);
+                            self.__oldValues__[attrName] = self[attrName];
+                            status[attrName] = true;
+                        });
+                    }
+                }
+            };
         }
     };
 }
@@ -57,10 +93,10 @@ observeProp = function(obj, propName, setter) {
     name = name[1];
     if (!(propName in obj.__setters__)) {
         obj.__setters__[propName] = {};
-        defineSetter(obj, propName, function(key, value) {
+        defineSetter(obj, propName, function(value, key, oldValue) {
             var self = this;
             each(self.__setters__[key], function() {
-                this.call(self, key, value);
+                this.call(self, value, key, oldValue);
             });
         });
     }
@@ -80,6 +116,20 @@ function checkPropName(propName) {
 }
 
 var observeProto = {
+    add: function(propName, value) {
+        this.__oldValues__[propName] = this[propName] = value;
+        return this;
+    },
+    remove: function(propName) {
+        if ('onpropertychange' in this && this.nodeName !== undefined) {
+            delete this.__oldValues__[propName];
+            this.removeAttribute(propName);
+        } else {
+            delete this.__oldValues__[propName];
+            delete this[propName];
+        }
+        return this;
+    },
     on: function() {
         var self = this,
             args = slice.call(arguments),
@@ -92,9 +142,9 @@ var observeProto = {
                     checkPropName(propName) && observeProp(self, propName, setter);
                 });
             } else if (isFunction(args)) {
-                for (key in self.__oldValue__) {
-                    self.__oldValue__.hasOwnProperty(key) && checkPropName(key) && observeProp(self, key, args);
-                }
+                each(self.__oldValues__, function(propName) {
+                    checkPropName(propName) && observeProp(self, propName, args);
+                });
             }
         } else if (args.length === 2 && isString(args[0]) && isFunction(args[1])) {
             checkPropName(args[0]) && observeProp(self, args[0], args[1]);
@@ -123,27 +173,25 @@ var observeProto = {
                 } else if (index > 0) {
                     propName = this.substr(0, index);
                     name = this.substr(index + 1);
-                    name in self.__setters__[propName] && delete self.__setters__[propName];
+                    name in self.__setters__[propName] && delete self.__setters__[propName][name];
                 } else if (this in self.__setters__) {
-                    delete self.__setters__[this];
+                    self.__setters__[this] = {};
                 }
             });
         }
         return this;
     },
     each: function(callback) {
-        var obj = this.__oldValue__;
-        for (var key in obj) {
-            callback.call(this, key, this[key]);
-        }
+        var self = this;
+        each(self.__oldValues__, function(key) {
+            callback.call(self, key, self[key]);
+        });
         return this;
     },
     extend: function() {
-        var self = this,
-            args = slice.call(arguments);
-        extend.apply(null, [this.__oldValue__].concat(args));
-        extend.apply(null, [this].concat(args));
-        return this;
+        var args = slice.call(arguments);
+        extend.apply(null, [this.__oldValues__].concat(args));
+        return extend.apply(null, [this].concat(args));
     }
 };
 
@@ -151,11 +199,11 @@ var observeProto = {
 $.observe = ES5 ? function(obj) {
     var ret = inherit(observeProto);
     ret.__setters__ = {};
-    ret.__oldValue__ = extend(true, {}, obj);
+    ret.__oldValues__ = extend(true, {}, obj);
     return extend(ret, obj);
 } : function(obj) {
     var ret = head.appendChild(doc.createComment('[object Object]'));
     ret.__setters__ = {};
-    ret.__oldValue__ = extend(true, {}, obj);
+    ret.__oldValues__ = extend(true, {}, obj);
     return extend(ret, observeProto, obj);
 };

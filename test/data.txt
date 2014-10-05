@@ -1,0 +1,16 @@
+{
+	"theTitle": "±êÌâ£ºjplus-test",
+	"center": "center",
+	"name": "×÷Õß£ºJade",
+	"paragraph": ["¶ÎÂä£ºTEST¡£","¶ÎÂä£ºTEST2¡£","¶ÎÂä£ºTEST3¡£","¶ÎÂä£ºTEST4¡£","¶ÎÂä£ºTEST5¡£","¶ÎÂä£ºTEST6¡£","¶ÎÂä£ºTEST7¡£","¶ÎÂä£ºTEST8¡£","¶ÎÂä£ºTEST9¡£"],
+	"red": "#f00",
+	"change": [{
+			"textIndent": "100px"
+		},
+		1000
+	],
+	"tpl": "<span js='text: tplText'></span>",
+	"theText": {
+		"tplText": "some word create by tpl."
+	}
+}

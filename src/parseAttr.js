@@ -38,7 +38,7 @@ function arrToObj(attrValueArr) {
 			case item[0] in $.fn:
 				ret[item[1]] = {
 					method: item[0],
-					args: []
+					args: arr
 				};
 				break;
 			default:

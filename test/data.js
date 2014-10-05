@@ -17,9 +17,11 @@ module.exports = {
 			lineHeight: '100px'
 		}, 400);
 	},
-	tpl: '<span js="text: tplText"></span>',
-	theText: {
-		tplText: 'some word create by tpl.'
+	tpl: {
+		html: '<span js="text: tplText"></span>',
+		refresh: {
+			tplText: 'some word create by tpl.'
+		}
 	}
 
 };
@@ -40,7 +42,9 @@ module.exports = {
 			lineHeight: '50px'
 		}, 400);
 	},
-	theText: {
-		tplText: 'change-some word create by tpl.'
+	tpl: {
+		refresh:{
+			tplText: 'change-some word create by tpl.'
+		}
 	}
 };

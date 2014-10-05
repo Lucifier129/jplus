@@ -9,6 +9,9 @@ scan.init = function(node) {
 }
 
 scan.fn = scan.init.prototype = scan.prototype = extend(inherit($.fn), {
+	rescan: function() {
+		return this.clean().collect();
+	},
 	collect: function(base) {
 		var self = this;
 		walkTheDOM(base || this[0], function(node) {
