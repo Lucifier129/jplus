@@ -3,9 +3,17 @@ jplus
 
 ## 关于 jplus
 
-一组 jQuery 的插件集，提供属性侦听、动态模板等功能。
+jQuery 多态编程风格
 
-## 状态
+## 用法
 
-开发中……
+首先必须引入 jQuery，再引入 jplus，即可在浏览器端正常使用。
 
+<pre>
+	<script type="text/javascript" src="vendor/jquery-1.7.2.min.js"></script>
+	<script type="text/javascript" src="../dist/jplus-debug.js"></script>
+</pre>
+
+## 文档
+
+撰写中……

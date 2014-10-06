@@ -3,6 +3,7 @@ var doc = document,
     head = doc.getElementsByTagName('head')[0],
     comment = doc.createComment('Kill IE'),
     NATIVE_RE = /\[native code\]/,
+    UNDEFINED = 'undefined',
     defineSetter,
     observeProp,
     ES5;
@@ -18,7 +19,7 @@ function randomStr() {
 if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
     ES5 = true;
     defineSetter = function(obj, propName, setter) {
-        var value = obj[propName] || 'undefined',
+        var value = obj[propName] || UNDEFINED,
             status = true;
         function trigger() {
             setter.call(obj, value, propName, obj.__oldValues__[propName]);
@@ -42,7 +43,7 @@ if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
 } else if (NATIVE_RE.test(Object.prototype.__defineSetter__)) {
     ES5 = true;
     defineSetter = function(obj, propName, setter) {
-        var value = obj[propName] || 'undefined',
+        var value = obj[propName] || UNDEFINED,
             status = true;
 
         function trigger() {
@@ -117,15 +118,14 @@ function checkPropName(propName) {
 
 var observeProto = {
     add: function(propName, value) {
-        this.__oldValues__[propName] = this[propName] = value;
+        this.__oldValues__[propName] = this[propName] = value || UNDEFINED;
         return this;
     },
     remove: function(propName) {
+        delete this.__oldValues__[propName];
         if ('onpropertychange' in this && this.nodeName !== undefined) {
-            delete this.__oldValues__[propName];
             this.removeAttribute(propName);
         } else {
-            delete this.__oldValues__[propName];
             delete this[propName];
         }
         return this;

@@ -1,1 +1,1 @@
-}(jQuery || Zepto, this));
+}(jQuery || Zepto));
