@@ -132,7 +132,7 @@ scan.fn = scan.init.prototype = scan.prototype = extend(inherit($.fn), {
 				instance[instance.length++] = node;
 			});
 		}
-		if (noscan !== undefined && node !== self[0]) return true;
+		if (noscan !== undefined) return true;
 	}
 });
 
@@ -183,11 +183,9 @@ function isMultipleArgs(arr) {
 	return false;
 }
 
-$.fn.refresh = function(model, opt) {
+$.fn.refresh = function(model, repeat) {
 	var self = this,
-		vmodel = self.getVM(),
-		repeat = typeof opt === 'boolean' ? opt : false;
-
+		vmodel = self.getVM();
 	each(model, function(prop, value) {
 		if (!(prop in vmodel)) return;
 		var target = vmodel[prop],
@@ -195,15 +193,17 @@ $.fn.refresh = function(model, opt) {
 			args = target.args,
 			$method = method in $.fn,
 			isArr = isArray(value),
-			multiple = isArr ? isMultipleArgs(value) : false,
 			cloneArr,
-			tpl,
-			ret;
+			multiple,
+			tpl;
+
+		if (isArr) {
+			multiple = isMultipleArgs(value);
+		}
 
 		switch (true) {
 			case $method && isArr && multiple:
 				$method = $.fn[method];
-				ret = [];
 				if (repeat) {
 					cloneArr = [];
 					tpl = target.eq(0);
@@ -213,7 +213,7 @@ $.fn.refresh = function(model, opt) {
 							item = tpl.clone(true, true);
 							cloneArr.push(item[0]);
 						}
-						ret.push($method.apply(item, args.concat(this)));
+						$method.apply(item, args.concat(this));
 					});
 
 					if (cloneArr.length) {
@@ -222,15 +222,14 @@ $.fn.refresh = function(model, opt) {
 						target.eq(-1).after($clone);
 						push.apply(target, cloneArr);
 					}
-				} else {
-					target.each(function(i) {
-						value[i] && ret.push($method.apply($(this), args.concat(value[i])));
-					});
 				}
+				each(target, function(i) {
+					$method.apply($(this), args.concat(value[i]))
+				});
 				break;
 
 			case $method:
-				ret = $.fn[method].apply(target, args.concat(value));
+				$.fn[method].apply(target, args.concat(value));
 				break;
 
 			default:
@@ -243,11 +242,8 @@ $.fn.refresh = function(model, opt) {
 					method.apply($(this), multiple ? args[i] : args);
 				});
 		}
-		if (method === 'listen') {
-			model[prop] = ret;
-		}
+		return this;
 	});
-	return this;
 }
 //observe.js
 var doc = document,

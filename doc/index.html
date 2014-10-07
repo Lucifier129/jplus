@@ -3,95 +3,32 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">
-<title>test-jplus</title>
+<title>jplus-文档</title>
 <style type="text/css">
 /* css reset*/
 html,body,div,span,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,abbr,address,cite,code,del,dfn,em,img,ins,kbd,q,samp,small,strong,sub,sup,var,b,i,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}:focus{outline:1}article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary{display:block}nav ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:"";content:none}a{margin:0;padding:0;border:0;font-size:100%;vertical-align:baseline;background:transparent}ins{background-color:#ff9;color:#000;text-decoration:none}mark{background-color:#ff9;color:#000;font-style:italic;font-weight:700}del{text-decoration:line-through}abbr[title],dfn[title]{border-bottom:1px dotted #000;cursor:help}table{border-collapse:collapse;border-spacing:0}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}input,select{vertical-align:middle}
 /* main */
 
-p { font-family: 'microsoft yahei'; font-size: 14px; margin:8px 0;}
 </style>
 </head>
 
-<body js="css-textAlign: center">
-	<h1 js="text: theTitle; css-color: red"></h1>
-	<h2 js="text: name "></h2>
-	<p js="text: paragraph "></p>
-	<p js="paragraph ;animate : change"></p>
-	<p js="paragraph ; func"></p>
-	<div js="render: tpl"></div>
-	<div class="test" noscan js="listen: testObj">
-		<p js="listen: obj">
-			<span js="text: txt"></span>
-		</p>
-		<p js="listen: obj">
-			<span js="text: txt"></span>
-		</p>
-		<p js="listen: obj">
-			<span js="text: txt"></span>
-		</p>
-		<p js="listen: obj">
-			<span js="text: txt"></span>
-		</p>
-		<p js="listen: obj">
-			<span js="text: txt"></span>
-		</p>
-		<p js="listen: obj">
-			<span js="text: txt"></span>
-		</p>
-		<p js="listen: obj">
-			<span js="text: txt"></span>
-		</p>
+<body>
+	<div class="wrap">
+		<div class="sidebar-nav">
+			<ul>
+				<li>$.fn.refresh</li>
+				<li>$.fn.render</li>
+				<li>$.fn.listen</li>
+				<li>$.observe</li>
+				<li>$.module</li>
+			</ul>
+		</div>
 	</div>
 
 <script type="text/javascript" src="vendor/sky-debug.js"></script>
 <script type="text/javascript" src="vendor/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="../dist/jplus-debug.js"></script>
 <script type="text/javascript">
-module.config = {
-	alias: {
-		'data': '../test/data.js'
-	},
-	debug: true
-};
-
-module.imports = ['data',
-	function(data) {
-
-		var model = $.module('body', function($scope) {
-			$.extend($scope, data[0]);
-		});
-
-		setTimeout(function() {
-			model.extend(data[1]);
-		}, 1000);
-	}
-];
-
-var obj = {
-		testObj: {
-			obj: [{
-				txt: 1
-			}, {
-				txt: 2
-			}, {
-				txt: 3
-			}, {
-				txt: 4
-			}, {
-				txt: 5
-			}, {
-				txt: 6
-			}, {
-				txt: 7
-			}]
-		}
-	};
-
-	$('body').refresh(obj);
-	console.log(obj);
-
-
 </script>
 </body>
 </html>

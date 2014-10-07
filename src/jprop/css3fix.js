@@ -1,5 +1,5 @@
 //css3fix
-var style = document.getElementsByTagName('body')[0].style,
+var style = document.createElement('div').style,
 	prefix = ['', '-webkit-', '-moz-', '-ms-', '-o-'],
 	len = prefix.length,
 	camelCase = $.camelCase;

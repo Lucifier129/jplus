@@ -19,9 +19,11 @@ function isMultipleArgs(arr) {
 	return false;
 }
 
-$.fn.refresh = function(model, repeat) {
+$.fn.refresh = function(model, opt) {
 	var self = this,
-		vmodel = self.getVM();
+		vmodel = self.getVM(),
+		repeat = typeof opt === 'boolean' ? opt : false;
+
 	each(model, function(prop, value) {
 		if (!(prop in vmodel)) return;
 		var target = vmodel[prop],
@@ -29,17 +31,15 @@ $.fn.refresh = function(model, repeat) {
 			args = target.args,
 			$method = method in $.fn,
 			isArr = isArray(value),
+			multiple = isArr ? isMultipleArgs(value) : false,
 			cloneArr,
-			multiple,
-			tpl;
-
-		if (isArr) {
-			multiple = isMultipleArgs(value);
-		}
+			tpl,
+			ret;
 
 		switch (true) {
 			case $method && isArr && multiple:
 				$method = $.fn[method];
+				ret = [];
 				if (repeat) {
 					cloneArr = [];
 					tpl = target.eq(0);
@@ -49,7 +49,7 @@ $.fn.refresh = function(model, repeat) {
 							item = tpl.clone(true, true);
 							cloneArr.push(item[0]);
 						}
-						$method.apply(item, args.concat(this));
+						ret.push($method.apply(item, args.concat(this)));
 					});
 
 					if (cloneArr.length) {
@@ -58,14 +58,15 @@ $.fn.refresh = function(model, repeat) {
 						target.eq(-1).after($clone);
 						push.apply(target, cloneArr);
 					}
+				} else {
+					target.each(function(i) {
+						value[i] && ret.push($method.apply($(this), args.concat(value[i])));
+					});
 				}
-				each(target, function(i) {
-					$method.apply($(this), args.concat(value[i]))
-				});
 				break;
 
 			case $method:
-				$.fn[method].apply(target, args.concat(value));
+				ret = $.fn[method].apply(target, args.concat(value));
 				break;
 
 			default:
@@ -78,6 +79,9 @@ $.fn.refresh = function(model, repeat) {
 					method.apply($(this), multiple ? args[i] : args);
 				});
 		}
-		return this;
+		if (method === 'listen') {
+			model[prop] = ret;
+		}
 	});
+	return this;
 }

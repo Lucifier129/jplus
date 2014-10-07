@@ -48,7 +48,7 @@ scan.fn = scan.init.prototype = scan.prototype = extend(inherit($.fn), {
 				instance[instance.length++] = node;
 			});
 		}
-		if (noscan !== undefined) return true;
+		if (noscan !== undefined && node !== self[0]) return true;
 	}
 });
 
