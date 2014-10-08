@@ -165,7 +165,7 @@ $.fn.getVM = function(rescan) {
 //refresh
 //requrie scan.js
 function isMultipleArgs(arr) {
-	if (!$.isArray(arr)) {
+	if (!isArray(arr)) {
 		return false;
 	}
 	var len = arr.length,
@@ -183,14 +183,29 @@ function isMultipleArgs(arr) {
 	return false;
 }
 
-$.fn.refresh = function(model, opt) {
-	var self = this,
-		vmodel = self.getVM(),
-		repeat = typeof opt === 'boolean' ? opt : false;
+function MVVM(source) {
+	isObject(source) && extend(this, source);
+}
 
-	each(model, function(prop, value) {
-		if (!(prop in vmodel)) return;
-		var target = vmodel[prop],
+MVVM.prototype = {
+	each: each,
+	extend: function() {
+		return extend.apply(null, [this].concat(slice.call(arguments))).refresh();
+	},
+	refresh: function() {
+		var self = this;
+		self.each(self.model, function(prop, value) {
+			if (!(prop in self.vmodel)) return;
+			self.render(prop, value);
+		});
+		return self;
+	},
+	render: function(prop, value) {
+		var model = this.model,
+			oldModel = this.oldModel,
+			vmodel = this.vmodel,
+			repeat = this.repeat,
+			target = vmodel[prop],
 			method = target.method,
 			args = target.args,
 			$method = method in $.fn,
@@ -199,6 +214,12 @@ $.fn.refresh = function(model, opt) {
 			cloneArr,
 			tpl,
 			ret;
+
+		if (typeof value !== 'object' && target.oldValue === value) {
+			return;
+		} else {
+			target.oldValue = value
+		}
 
 		switch (true) {
 			case $method && isArr && multiple:
@@ -246,7 +267,20 @@ $.fn.refresh = function(model, opt) {
 		if (method === 'listen') {
 			model[prop] = ret;
 		}
+	}
+}
+
+var mvvm = new MVVM();
+
+
+$.fn.refresh = function(model, opt) {
+
+	mvvm.extend({
+		model: model,
+		vmodel: this.getVM(),
+		repeat: typeof opt === 'boolean' ? opt : false
 	});
+
 	return this;
 }
 //observe.js
@@ -273,7 +307,9 @@ if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
         var value = obj[propName] || UNDEFINED,
             status = true;
         function trigger() {
-            setter.call(obj, value, propName, obj.__oldValues__[propName]);
+            var oldValue = obj.__oldValues__[propName];
+            if (oldValue === value) return;
+            setter.call(obj, value, propName, oldValue);
             obj.__oldValues__[propName] = value;
             status = true;
         }
@@ -298,7 +334,9 @@ if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
             status = true;
 
         function trigger() {
-            setter.call(obj, value, propName, obj.__oldValues__[propName]);
+            var oldValue = obj.__oldValues__[propName];
+            if (oldValue === value) return;
+            setter.call(obj, value, propName, oldValue);
             obj.__oldValues__[propName] = value;
             status = true;
         }
@@ -328,7 +366,9 @@ if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
                     if (status[attrName]) {
                         status[attrName] = false;
                         nextTick(function() {
-                            setter.call(self, self[attrName], attrName, self.__oldValues__[attrName]);
+                            var oldValue = self.__oldValues__[attrName];
+                            if (oldValue === self[attrName]) return;
+                            setter.call(self, self[attrName], attrName, oldValue);
                             self.__oldValues__[attrName] = self[attrName];
                             status[attrName] = true;
                         });
@@ -441,21 +481,28 @@ var observeProto = {
     },
     extend: function() {
         var args = slice.call(arguments);
-        extend.apply(null, [this.__oldValues__].concat(args));
         return extend.apply(null, [this].concat(args));
     }
 };
 
 
 $.observe = ES5 ? function(obj) {
-    var ret = inherit(observeProto);
+    var ret = inherit(observeProto),
+        oldValues = ret.__oldValues__ = {},
+        initValue = '$.observe' + randomStr();
     ret.__setters__ = {};
-    ret.__oldValues__ = extend(true, {}, obj);
+    for (var prop in obj) {
+        oldValues[prop] = initValue;
+    }
     return extend(ret, obj);
 } : function(obj) {
-    var ret = head.appendChild(doc.createComment('[object Object]'));
+    var ret = head.appendChild(doc.createComment('[object Object]')),
+        oldValues = ret.__oldValues__ = {},
+        initValue = '$.observe' + randomStr();
     ret.__setters__ = {};
-    ret.__oldValues__ = extend(true, {}, obj);
+    for (var prop in obj) {
+        oldValues[prop] = initValue;
+    }
     return extend(ret, observeProto, obj);
 };
 //plus.js

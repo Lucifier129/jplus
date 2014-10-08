@@ -27,7 +27,7 @@ module.exports = {
 };
 
 module.exports = {
-	theTitle: '标题：jplus-test-change-title',
+	theTitle: '标题：jplus-test-change',
 	name: '作者：Jade-change',
 	paragraph: ['段落change：TEST。', '段落change：TEST1。', '段落change：TEST2。', '段落change：TEST3。', '段落change：TEST4。', '段落change：TEST5。', '段落change：TEST6。', '段落change：TEST7。', '段落change：TEST8。', '段落change：TEST9。'],
 	red: 'green',

@@ -1,7 +1,7 @@
 //refresh
 //requrie scan.js
 function isMultipleArgs(arr) {
-	if (!$.isArray(arr)) {
+	if (!isArray(arr)) {
 		return false;
 	}
 	var len = arr.length,
@@ -19,14 +19,29 @@ function isMultipleArgs(arr) {
 	return false;
 }
 
-$.fn.refresh = function(model, opt) {
-	var self = this,
-		vmodel = self.getVM(),
-		repeat = typeof opt === 'boolean' ? opt : false;
+function MVVM(source) {
+	isObject(source) && extend(this, source);
+}
 
-	each(model, function(prop, value) {
-		if (!(prop in vmodel)) return;
-		var target = vmodel[prop],
+MVVM.prototype = {
+	each: each,
+	extend: function() {
+		return extend.apply(null, [this].concat(slice.call(arguments))).refresh();
+	},
+	refresh: function() {
+		var self = this;
+		self.each(self.model, function(prop, value) {
+			if (!(prop in self.vmodel)) return;
+			self.render(prop, value);
+		});
+		return self;
+	},
+	render: function(prop, value) {
+		var model = this.model,
+			oldModel = this.oldModel,
+			vmodel = this.vmodel,
+			repeat = this.repeat,
+			target = vmodel[prop],
 			method = target.method,
 			args = target.args,
 			$method = method in $.fn,
@@ -35,6 +50,12 @@ $.fn.refresh = function(model, opt) {
 			cloneArr,
 			tpl,
 			ret;
+
+		if (typeof value !== 'object' && target.oldValue === value) {
+			return;
+		} else {
+			target.oldValue = value
+		}
 
 		switch (true) {
 			case $method && isArr && multiple:
@@ -82,6 +103,19 @@ $.fn.refresh = function(model, opt) {
 		if (method === 'listen') {
 			model[prop] = ret;
 		}
+	}
+}
+
+var mvvm = new MVVM();
+
+
+$.fn.refresh = function(model, opt) {
+
+	mvvm.extend({
+		model: model,
+		vmodel: this.getVM(),
+		repeat: typeof opt === 'boolean' ? opt : false
 	});
+
 	return this;
 }

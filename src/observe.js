@@ -22,7 +22,9 @@ if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
         var value = obj[propName] || UNDEFINED,
             status = true;
         function trigger() {
-            setter.call(obj, value, propName, obj.__oldValues__[propName]);
+            var oldValue = obj.__oldValues__[propName];
+            if (oldValue === value) return;
+            setter.call(obj, value, propName, oldValue);
             obj.__oldValues__[propName] = value;
             status = true;
         }
@@ -47,7 +49,9 @@ if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
             status = true;
 
         function trigger() {
-            setter.call(obj, value, propName, obj.__oldValues__[propName]);
+            var oldValue = obj.__oldValues__[propName];
+            if (oldValue === value) return;
+            setter.call(obj, value, propName, oldValue);
             obj.__oldValues__[propName] = value;
             status = true;
         }
@@ -77,7 +81,9 @@ if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
                     if (status[attrName]) {
                         status[attrName] = false;
                         nextTick(function() {
-                            setter.call(self, self[attrName], attrName, self.__oldValues__[attrName]);
+                            var oldValue = self.__oldValues__[attrName];
+                            if (oldValue === self[attrName]) return;
+                            setter.call(self, self[attrName], attrName, oldValue);
                             self.__oldValues__[attrName] = self[attrName];
                             status[attrName] = true;
                         });
@@ -190,20 +196,27 @@ var observeProto = {
     },
     extend: function() {
         var args = slice.call(arguments);
-        extend.apply(null, [this.__oldValues__].concat(args));
         return extend.apply(null, [this].concat(args));
     }
 };
 
 
 $.observe = ES5 ? function(obj) {
-    var ret = inherit(observeProto);
+    var ret = inherit(observeProto),
+        oldValues = ret.__oldValues__ = {},
+        initValue = '$.observe' + randomStr();
     ret.__setters__ = {};
-    ret.__oldValues__ = extend(true, {}, obj);
+    for (var prop in obj) {
+        oldValues[prop] = initValue;
+    }
     return extend(ret, obj);
 } : function(obj) {
-    var ret = head.appendChild(doc.createComment('[object Object]'));
+    var ret = head.appendChild(doc.createComment('[object Object]')),
+        oldValues = ret.__oldValues__ = {},
+        initValue = '$.observe' + randomStr();
     ret.__setters__ = {};
-    ret.__oldValues__ = extend(true, {}, obj);
+    for (var prop in obj) {
+        oldValues[prop] = initValue;
+    }
     return extend(ret, observeProto, obj);
 };

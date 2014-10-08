@@ -20,26 +20,26 @@ p { font-family: 'microsoft yahei'; font-size: 14px; margin:8px 0;}
 	<p js="paragraph ;animate : change"></p>
 	<p js="paragraph ; func"></p>
 	<div js="render: tpl"></div>
-	<div class="test" noscan js="listen: testObj">
+	<div class="test" noscan js="refresh: testObj">
 		<p js="listen: obj">
 			<span js="text: txt"></span>
 		</p>
-		<p js="listen: obj">
+		<p js="obj">
 			<span js="text: txt"></span>
 		</p>
-		<p js="listen: obj">
+		<p js="obj">
 			<span js="text: txt"></span>
 		</p>
-		<p js="listen: obj">
+		<p js="obj">
 			<span js="text: txt"></span>
 		</p>
-		<p js="listen: obj">
+		<p js="obj">
 			<span js="text: txt"></span>
 		</p>
-		<p js="listen: obj">
+		<p js="obj">
 			<span js="text: txt"></span>
 		</p>
-		<p js="listen: obj">
+		<p js="obj">
 			<span js="text: txt"></span>
 		</p>
 	</div>
@@ -89,7 +89,10 @@ var obj = {
 	};
 
 	$('body').refresh(obj);
-	console.log(obj);
+
+	setTimeout(function() {
+		obj.testObj.obj[2].txt = 4545454545;
+	}, 1000)
 
 
 </script>
