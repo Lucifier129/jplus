@@ -21,22 +21,7 @@ p { font-family: 'microsoft yahei'; font-size: 14px; margin:8px 0;}
 	<p js="paragraph ; func"></p>
 	<div js="render: tpl"></div>
 	<div class="test" noscan js="refresh: testObj">
-		<p js="listen: obj">
-			<span js="text: txt"></span>
-		</p>
-		<p js="obj">
-			<span js="text: txt"></span>
-		</p>
-		<p js="obj">
-			<span js="text: txt"></span>
-		</p>
-		<p js="obj">
-			<span js="text: txt"></span>
-		</p>
-		<p js="obj">
-			<span js="text: txt"></span>
-		</p>
-		<p js="obj">
+		<p js="listen:obj">
 			<span js="text: txt"></span>
 		</p>
 		<p js="obj">
@@ -58,12 +43,15 @@ module.config = {
 module.imports = ['data',
 	function(data) {
 
-		var model = $.module('body', function($scope) {
+		/*var model = $.module('body', function($scope) {
 			$.extend($scope, data[0]);
-		});
+		});*/
+
+		$('body').refresh(data[0], true);
 
 		setTimeout(function() {
-			model.extend(data[1]);
+			$('body').refresh(data[1]);
+			/*model.extend(data[1]);*/
 		}, 1000);
 	}
 ];
@@ -71,28 +59,16 @@ module.imports = ['data',
 var obj = {
 		testObj: {
 			obj: [{
-				txt: 1
-			}, {
-				txt: 2
-			}, {
-				txt: 3
-			}, {
-				txt: 4
-			}, {
-				txt: 5
-			}, {
-				txt: 6
-			}, {
-				txt: 7
+				txt:1
+			},{
+				txt:2
 			}]
 		}
 	};
 
 	$('body').refresh(obj);
 
-	setTimeout(function() {
-		obj.testObj.obj[2].txt = 4545454545;
-	}, 1000)
+
 
 
 </script>
