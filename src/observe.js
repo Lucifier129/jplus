@@ -35,12 +35,17 @@ if (def.defineProperty) {
         var value = obj[propName] || UNDEFINED,
             status = true;
 
-        function trigger() {
-            var oldValue = obj.$$oldValues[propName];
-            if (oldValue === value) return;
-            setter.call(obj, value, propName, oldValue);
+        var trigger = function() {
+            setter.call(obj, value, propName, obj.$$oldValues[propName]);
             obj.$$oldValues[propName] = value;
             status = true;
+            trigger = function() {
+                var oldValue = obj.$$oldValues[propName];
+                status = true;
+                if (deepCompare(oldValue, value)) return;
+                setter.call(obj, value, propName, oldValue);
+                obj.$$oldValues[propName] = value;
+            }
         }
         delete obj[propName];
         def.defineProperty(obj, propName, {
@@ -67,16 +72,19 @@ if (def.defineProperty) {
             if (!(attrName in this.$$setters)) return;
             if (status[attrName] === undefined) {
                 status[attrName] = true;
+                setter.call(self, self[attrName], attrName, self.$$oldValues[attrName]);
+                self.$$oldValues[attrName] = self[attrName];
+                return;
             }
             if (!status[attrName]) return;
 
             status[attrName] = false;
             nextTick(function() {
                 var oldValue = self.$$oldValues[attrName];
-                if (oldValue === self[attrName]) return;
+                status[attrName] = true;
+                 if (deepCompare(oldValue, self[attrName])) return;
                 setter.call(self, self[attrName], attrName, oldValue);
                 self.$$oldValues[attrName] = self[attrName];
-                status[attrName] = true;
             });
         };
     };
@@ -100,7 +108,7 @@ function observeProp(obj, propName, setter) {
 }
 
 function checkPropName(propName) {
-    if ($.ES5) return true;
+    if ($.ES5) return;
     if (propName in comment) {
         throw new Error(
             'If you want to support IE6/7/8. The property name [' + propName + '] can not be observed, ' +
@@ -108,7 +116,6 @@ function checkPropName(propName) {
             'You can use the [jQuery.ES5 = true] to ignore IE6/7/8.'
         );
     }
-    return true;
 }
 
 
@@ -119,7 +126,8 @@ function Observe(source) {
 Observe.prototype = {
     $$proto: {
         add: function(propName, value) {
-            this.$$oldValues[propName] = this[propName] = value || UNDEFINED;
+            this[propName] = value || UNDEFINED;
+            this.$$oldValues[propName] = '$.observe' + randomStr();
             return this;
         },
         remove: function(propName) {
@@ -133,22 +141,24 @@ Observe.prototype = {
         },
         on: function() {
             var self = this,
-                args = slice.call(arguments),
-                key;
+                args = slice.call(arguments);
 
             if (args.length === 1) {
                 args = args[0];
                 if (isObject(args)) {
                     each(args, function(propName, setter) {
-                        checkPropName(propName) && observeProp(self, propName, setter);
+                        checkPropName(propName);
+                        observeProp(self, propName, setter);
                     });
                 } else if (isFunction(args)) {
-                    each(self.$$oldValues, function(propName) {
-                        checkPropName(propName) && observeProp(self, propName, args);
+                    self.each(function(propName) {
+                        checkPropName(propName);
+                        observeProp(self, propName, args);
                     });
                 }
             } else if (args.length === 2 && isString(args[0]) && isFunction(args[1])) {
-                checkPropName(args[0]) && observeProp(self, args[0], args[1]);
+                checkPropName(args[0]);
+                observeProp(self, args[0], args[1]);
             }
 
             return this;
@@ -196,28 +206,32 @@ Observe.prototype = {
     init: ES5 ? function() {
         var source = this.source,
             target = inherit(this.$$proto),
-            oldValues = target.$$oldValues = {},
-            initValue = '$.observe' + randomStr();
-
+            oldValues = target.$$oldValues = {};
         target.$$setters = {};
-        for (var prop in source) {
-            oldValues[prop] = initValue;
+        for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+                oldValues[key] = target[key] = source[key];
+            }
         }
-        return extend(target, source);
+        return target;
     } : function() {
         var source = this.source,
             target = head.appendChild(doc.createComment('[object Object]')),
-            oldValues = target.$$oldValues = {},
-            initValue = '$.observe' + randomStr();
-        target.$$setters = {};
-        for (var prop in source) {
-            oldValues[prop] = initValue;
+            oldValues = target.$$oldValues = {};
+        extend(target, this.$$proto).$$setters = {};
+        for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+                oldValues[key] = target[key] = source[key];
+            }
         }
-        return extend(target, this.$$proto, source);
+        return target;
     }
-}
+};
 
 
-$.observe = function(source) {
-    return new Observe(source).init();
-}
+$.observe = function(source, setters) {
+    var model;
+    if (!isObject(source)) return null;
+    model = new Observe(source).init();
+    return setters && (isObject(setters) || isFunction(setters)) ? model.on(setters) : model;
+};

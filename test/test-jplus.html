@@ -13,19 +13,19 @@ p { font-family: 'microsoft yahei'; font-size: 14px; margin:8px 0;}
 </style>
 </head>
 
-<body js="css-textAlign: center">
+<body js="css-textAlign: center" app="global">
 	<h1 js="text: theTitle; css-color: red"></h1>
 	<h2 js="text: name "></h2>
 	<p js="text: paragraph "></p>
 	<p js="paragraph ;animate : change"></p>
 	<p js="paragraph ; func"></p>
 	<div js="render: tpl"></div>
-	<div class="test" noscan js="refresh: testObj">
+	<div class="test" app="sub" js="refresh: testObj">
 		<p js="listen:obj">
 			<span js="text: txt"></span>
 		</p>
 		<p js="obj">
-			<span js="text: txt"></span>
+			<span js="text: txt">123132</span>
 		</p>
 	</div>
 
@@ -43,16 +43,25 @@ module.config = {
 module.imports = ['data',
 	function(data) {
 
-		/*var model = $.module('body', function($scope) {
-			$.extend($scope, data[0]);
-		});*/
+		$.module.ready(function() {
+			var $module = this;
+			this.global = data[0];
+			this.sub = obj;
+			setTimeout(function() {
+				$module.global.extend(data[1]);
+				$module.sub.testObj.obj[1].txt = 123123;
+			}, 1000);
+		});
 
-		$('body').refresh(data[0], true);
+
+		/*var model = $.define('body', function() {
+			return data[0];
+		});
 
 		setTimeout(function() {
-			$('body').refresh(data[1]);
-			/*model.extend(data[1]);*/
-		}, 1000);
+			model.extend(data[1]);
+			obj.testObj.obj[1].txt = 23412341234;
+		}, 1000);*/
 	}
 ];
 
@@ -66,7 +75,9 @@ var obj = {
 		}
 	};
 
-	$('body').refresh(obj);
+
+
+
 
 
 

@@ -35,7 +35,6 @@ scan.fn = scan.init.prototype = scan.prototype = extend(inherit($.fn), {
 		if (/text/.test(node.nodeName)) return;
 		var self = this,
 			$node = $(node),
-			noscan = $node.attr('noscan'),
 			jsAttrValue = $node.attr('js');
 
 		if (jsAttrValue) {
@@ -48,7 +47,7 @@ scan.fn = scan.init.prototype = scan.prototype = extend(inherit($.fn), {
 				instance[instance.length++] = node;
 			});
 		}
-		if (noscan !== undefined && node !== self[0]) return true;
+		if ($node.attr('noscan') !== undefined && $node.attr('app') && node !== self[0]) return true;
 	}
 });
 

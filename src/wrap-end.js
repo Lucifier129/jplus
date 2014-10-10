@@ -1,1 +1,1 @@
-}(jQuery || Zepto));
+}(window.jQuery || window.Zepto));

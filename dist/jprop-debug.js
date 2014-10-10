@@ -466,4 +466,4 @@ $.fn.swipeshow = function(options) {
 	}
 	return this;
 };
-}(jQuery || Zepto));
+}(window.jQuery || window.Zepto));
