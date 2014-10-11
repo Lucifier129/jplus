@@ -119,11 +119,8 @@ function checkPropName(propName) {
 }
 
 
-function Observe(source) {
-    this.source = source;
-}
 
-Observe.prototype = {
+var observer = {
     $$proto: {
         add: function(propName, value) {
             this[propName] = value || UNDEFINED;
@@ -203,9 +200,8 @@ Observe.prototype = {
             return extend.apply(null, [this].concat(slice.call(arguments)));
         }
     },
-    init: ES5 ? function() {
-        var source = this.source,
-            target = inherit(this.$$proto),
+    init: ES5 ? function(source) {
+        var target = inherit(this.$$proto),
             oldValues = target.$$oldValues = {};
         target.$$setters = {};
         for (var key in source) {
@@ -214,9 +210,8 @@ Observe.prototype = {
             }
         }
         return target;
-    } : function() {
-        var source = this.source,
-            target = head.appendChild(doc.createComment('[object Object]')),
+    } : function(source) {
+        var target = head.appendChild(doc.createComment('[object Object]')),
             oldValues = target.$$oldValues = {};
         extend(target, this.$$proto).$$setters = {};
         for (var key in source) {
@@ -229,9 +224,10 @@ Observe.prototype = {
 };
 
 
+
 $.observe = function(source, setters) {
     var model;
     if (!isObject(source)) return null;
-    model = new Observe(source).init();
-    return setters && (isObject(setters) || isFunction(setters)) ? model.on(setters) : model;
+    model = observer.init(source);
+    return isObject(setters) || isFunction(setters) ? model.on(setters) : model;
 };

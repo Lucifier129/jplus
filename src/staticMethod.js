@@ -16,5 +16,4 @@ var trim = $.trim,
 		return toStr.call(obj) === '[object String]';
 	},
 	inArray = $.inArray,
-	noop = $.noop,
-	$data = $.data;
+	noop = $.noop;
