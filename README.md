@@ -1,21 +1,19 @@
 jPlus
 =====
 
-## 关于 jplus
-
 不再喜欢「选择dom元素-进行操作」的编程风格？
 
 开始讨厌长长的链式调用？
 
 想用前端MV*框架，难以抛弃的jQuery库却成了阻碍？
 
-试试jPlust提供的新选择——jQuery 多态编程风格
+试试jPlust提供的新选择——`jQuery 多态编程风格`
 
 jQuery中的MV*模式
 
 ## 用法
 
-首先引入 jQuery，再引入 jplus，即可在浏览器端正常使用。
+引入 jQuery，再引入 jplus，即可在浏览器端正常使用。
 
 ```html
 <script type="text/javascript" src="jquery-1.7.2.min.js"></script>
@@ -349,6 +347,8 @@ model.extend({
 充分领会`refresh`的用法，已能带来`jQuery`编程风格上的极大不同；
 
 希望`jPlus`确实能帮助到开发者使用`jQuery`时有更好的体验；
+
+`jPlus`提供的一切方法，都支持IE6+;
 
 请多多反馈不足之处，以便改进。
 
