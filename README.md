@@ -15,7 +15,7 @@ jQuery中的MV*模式
 
 ## 用法
 
-首先必须引入 jQuery，再引入 jplus，即可在浏览器端正常使用。
+首先引入 jQuery，再引入 jplus，即可在浏览器端正常使用。
 
 ```html
 <script type="text/javascript" src="jquery-1.7.2.min.js"></script>
@@ -27,11 +27,11 @@ jQuery中的MV*模式
 
 ###$.fn.render(api)
 
-`render`方法接受一个对象作为参数`type: {{ object }}‘;
+`render`方法接受一个对象作为参数`type: {{ object }}`;
 
 其`key`为`$.fn`中存在的任意方法（包括`render`自身）;
 
-其`value'的值将作为'key'所对应的方法的参数,如果`$.fn[key]`接受多个参数，写成数组形式即可
+其`value`的值将作为`key`所对应的方法的参数,如果`$.fn[key]`接受多个参数，写成数组形式即可
 
 ```javascript
 $('body').render({
