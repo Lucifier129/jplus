@@ -216,6 +216,8 @@ var transform = $.css3fix('transform'),
 	styleElement;
 if (transform && transition) {
 	offsetMethod = {
+		speed:400,
+		className:'transi-for-swipeshow',
 		setX: function(elem, value) {
 			elem.style[transform] = 'translateX(' + value + 'px)';
 		},
@@ -223,14 +225,14 @@ if (transform && transition) {
 			elem.style[transform] = 'translateY(' + value + 'px)';
 		},
 		animateX: function(elem, value, callback) {
-			$(elem).addClass('transi-for-swipeshow');
+			$(elem).addClass(offsetMethod.className);
 			offsetMethod.setX(elem, value);
-			setTimeout(callback, 400);
+			setTimeout(callback, offsetMethod.speed);
 		},
 		animateY: function(elem, value, callback) {
-			$(elem).addClass('transi-for-swipeshow');
+			$(elem).addClass(offsetMethod.className);
 			offsetMethod.setY(elem, value);
-			setTimeout(callback, 400);
+			setTimeout(callback, offsetMethod.speed);
 		}
 	};
 	styleElement = document.createElement('style');
@@ -239,6 +241,7 @@ if (transform && transition) {
 	document.getElementsByTagName('head')[0].appendChild(styleElement);
 } else {
 	offsetMethod = {
+		speed:400,
 		setX: function(elem, value) {
 			elem.style.marginLeft = value + 'px';
 		},
@@ -248,17 +251,17 @@ if (transform && transition) {
 		animateX: function(elem, value, callback) {
 			$(elem).animate({
 				marginLeft: value
-			}, 400, callback);
+			}, offsetMethod.speed, callback);
 		},
 		animateY: function(elem, value, callback) {
 			$(elem).animate({
 				marginTop: value
-			}, 400, callback);
+			}, offsetMethod.speed, callback);
 		}
 	};
 }
 
-
+$.offsetMethod = offsetMethod;
 $.fn.swipeshow = function(options) {
 	var settings = {
 		dir: 'x',
@@ -361,7 +364,7 @@ $.fn.swipeshow = function(options) {
 				}
 				if (set) {
 					offset = index * distance;
-					setter(transition ? self.removeClass('transi-for-swipeshow')[0] : elem, offset);
+					setter(transition ? self.removeClass(offsetMethod.className)[0] : elem, offset);
 				}
 				animated = true;
 			},
@@ -378,6 +381,7 @@ $.fn.swipeshow = function(options) {
 							.siblings().removeClass(settings.className);
 					}
 				}
+				settings.callback && settings.callback.call(self, clone ? count % 2 : count);
 				return this;
 			},
 			normal: function() {
@@ -385,14 +389,12 @@ $.fn.swipeshow = function(options) {
 					return;
 				}
 				handler.check(Math.round(offset / distance)).slide();
-				settings.callback && settings.callback.call(self, clone ? count % 2 : count);
 			},
 			next: function() {
 				if (!animated) {
 					return this;
 				}
 				handler.check(index - 1).slide();
-				settings.callback && settings.callback.call(self, clone ? count % 2 : count);
 				return this;
 			},
 			prev: function() {
@@ -400,10 +402,10 @@ $.fn.swipeshow = function(options) {
 					return;
 				}
 				handler.check(index + 1).slide();
-				settings.callback && settings.callback.call(self, clone ? count % 2 : count);
 			}
 		}).check(0).slide();
 
+	var dir = settings.dir.toLowerCase();
 	self.swipe({
 		tap: function() {
 			preventDefault = false;
@@ -413,13 +415,13 @@ $.fn.swipeshow = function(options) {
 			if (!animated) {
 				return;
 			}
-			self.removeClass('transi-for-swipeshow');
+			self.removeClass(offsetMethod.className);
 		},
 		move: function(e, data) {
 			if (!animated) {
 				return;
 			}
-			offset += data[settings.dir.toLowerCase()];
+			offset += data[dir];
 			setter(elem, offset);
 		},
 		end: handler.normal,
@@ -456,13 +458,13 @@ $.fn.swipeshow = function(options) {
 	if (settings.next) {
 		settings.next = $(settings.next);
 		settings.next.on('click', handler.next);
-		hover && settings.next.parent().data('hover') || settings.next.on('mouseenter mouseleave', hover);
+		hover && (settings.next.parent().data('hover') || settings.next.on('mouseenter mouseleave', hover));
 
 	}
 	if (settings.prev) {
 		settings.prev = $(settings.prev);
 		settings.prev.on('click', handler.prev);
-		hover && settings.prev.parent().data('hover') || settings.prev.on('mouseenter mouseleave', hover);
+		hover && (settings.prev.parent().data('hover') || settings.prev.on('mouseenter mouseleave', hover));
 	}
 	return this;
 };

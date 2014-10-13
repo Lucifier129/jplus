@@ -9,31 +9,51 @@
 html,body,div,span,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,abbr,address,cite,code,del,dfn,em,img,ins,kbd,q,samp,small,strong,sub,sup,var,b,i,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}:focus{outline:1}article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary{display:block}nav ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:"";content:none}a{margin:0;padding:0;border:0;font-size:100%;vertical-align:baseline;background:transparent}ins{background-color:#ff9;color:#000;text-decoration:none}mark{background-color:#ff9;color:#000;font-style:italic;font-weight:700}del{text-decoration:line-through}abbr[title],dfn[title]{border-bottom:1px dotted #000;cursor:help}table{border-collapse:collapse;border-spacing:0}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}input,select{vertical-align:middle}
 /* main */
 body { overflow: hidden;}
-html, body, .wrap, .wrap ul, .wrap li { height: 100%;}
+html, body, .wrap { height: 100%;}
+.wrap { position:relative;}
 .bg1 {background:#a6e22a;}
 .bg2 {background:#e6db67;}
 .bg3 {background:#f9263e;}
 .bg4 {background:#a4cb3c;}
 .bg5 {background:#019a62;}
+
+.opts { position:absolute; top:50%; right:5%; list-style-type:none }
+.opts li { width: 16px; height: 16px; background:#333; background:rgba(0,0,0,.3); margin-bottom: 13px; border-radius: 50%;}
+.opts li.cur { background:#fff;}
 </style>
 </head>
 
 <body>
 	<div class="wrap">
-		<ul>
+		<ul class="slider">
 			<li class="bg1"></li>
 			<li class="bg2"></li>
 			<li class="bg3"></li>
 			<li class="bg4"></li>
 			<li class="bg5"></li>
 		</ul>
+		<ul class="opts">
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+		</ul>
 	</div>
 
 <script type="text/javascript" src="vendor/jquery-1.7.2.min.js"></script>
-<script type="text/javascript" src="../dist/jplus-debug.js"></script>
-<script type="text/javascript" src="../dist/jprop-debug.js"></script>
+<script type="text/javascript" src="../dist/jprop.js"></script>
 <script type="text/javascript">
-	$('ul').swipeshow();
+$(function() {
+	$('.slider').swipeshow({
+		opts: ".opts",
+		dir: 'y',
+		callback:function(i) {
+			var value =Math.random();
+			this.find('li').eq(i).text(value);
+		}
+	});
+});
 </script>
 </body>
 </html>

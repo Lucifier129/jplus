@@ -4,7 +4,7 @@ var trim = $.trim,
 	extend = $.extend,
 	toStr = Object.prototype.toString,
 	isObject = function(obj) {
-		return toStr.call(obj) === '[object Object]';
+		return obj == null ? obj : toStr.call(obj) === '[object Object]';
 	},
 	isArray = Array.isArray || function(obj) {
 		return toStr.call(obj) === '[object Array]';
