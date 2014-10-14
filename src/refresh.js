@@ -146,9 +146,7 @@ MVVM.prototype = {
 				});
 
 				if (cloneArr.length) {
-					var $clone = instantiation();
-					push.apply($clone, cloneArr);
-					target.eq(-1).after($clone);
+					target.eq(-1).after(cloneArr);
 					push.apply(target, cloneArr);
 				}
 

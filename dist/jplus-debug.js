@@ -11,10 +11,7 @@ var arr = [],
 	push = arr.push,
 	slice = arr.slice;
 //staticMethod
-var trim = $.trim,
-	each = $.each,
-	extend = $.extend,
-	toStr = Object.prototype.toString,
+var toStr = Object.prototype.toString,
 	isObject = function(obj) {
 		return obj == null ? obj : toStr.call(obj) === '[object Object]';
 	},
@@ -27,9 +24,11 @@ var trim = $.trim,
 	isString = function(obj) {
 		return toStr.call(obj) === '[object String]';
 	},
-	inArray = $.inArray,
-	noop = $.noop;
-
+	noop = function() {},
+	trim = $.trim,
+	each = $.each,
+	extend = $.extend,
+	inArray = $.inArray;
 //inherit
 var inherit = Object.create || function(proto) {
 	var F = function() {};
@@ -80,9 +79,7 @@ function arrToObj(attrValueArr) {
 				};
 				break;
 			default:
-				ret[item[0]] = {
-					method: noop
-				};
+				ret[item[0]] = {};
 		}
 
 	});
@@ -315,9 +312,7 @@ MVVM.prototype = {
 				});
 
 				if (cloneArr.length) {
-					var $clone = instantiation();
-					push.apply($clone, cloneArr);
-					target.eq(-1).after($clone);
+					target.eq(-1).after(cloneArr);
 					push.apply(target, cloneArr);
 				}
 

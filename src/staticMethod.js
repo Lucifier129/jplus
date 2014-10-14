@@ -1,8 +1,5 @@
 //staticMethod
-var trim = $.trim,
-	each = $.each,
-	extend = $.extend,
-	toStr = Object.prototype.toString,
+var toStr = Object.prototype.toString,
 	isObject = function(obj) {
 		return obj == null ? obj : toStr.call(obj) === '[object Object]';
 	},
@@ -15,5 +12,8 @@ var trim = $.trim,
 	isString = function(obj) {
 		return toStr.call(obj) === '[object String]';
 	},
-	inArray = $.inArray,
-	noop = $.noop;
+	noop = function() {},
+	trim = $.trim,
+	each = $.each,
+	extend = $.extend,
+	inArray = $.inArray;

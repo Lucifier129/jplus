@@ -42,9 +42,7 @@ function arrToObj(attrValueArr) {
 				};
 				break;
 			default:
-				ret[item[0]] = {
-					method: noop
-				};
+				ret[item[0]] = {};
 		}
 
 	});
