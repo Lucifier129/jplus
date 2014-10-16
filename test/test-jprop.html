@@ -17,20 +17,23 @@ html, body, .wrap { height: 100%;}
 .bg4 {background:#a4cb3c;}
 .bg5 {background:#019a62;}
 
-.opts { position:absolute; top:50%; right:5%; list-style-type:none }
-.opts li { width: 16px; height: 16px; background:#333; background:rgba(0,0,0,.3); margin-bottom: 13px; border-radius: 50%;}
+.opts { position:absolute; bottom:30px; left:0; width: 100%; text-align: center; list-style-type:none }
+.opts li { display: inline-block; *display: inline; *zoom:1; width: 16px; height: 16px; margin:0 3px; background:#333; background:rgba(0,0,0,.3); margin-bottom: 13px; border-radius: 50%;}
 .opts li.cur { background:#fff;}
+.prev, .next { position:absolute; top:50%; width: 80px; height: 120px; margin-top:-60px; font-size: 68px; font-weight: 700; text-align: center; line-height: 120px; color:#fff; background:#000; background:rgba(0,0,0,.3); cursor:pointer;}
+.next { right:0; }
+.prev { left:0;}
 </style>
 </head>
 
 <body>
 	<div class="wrap">
 		<ul class="slider">
-			<li class="bg1"></li>
-			<li class="bg2"></li>
-			<li class="bg3"></li>
-			<li class="bg4"></li>
-			<li class="bg5"></li>
+			<li class="bg1">1</li>
+			<li class="bg2">2</li>
+			<li class="bg3">3</li>
+			<li class="bg4">4</li>
+			<li class="bg5">5</li>
 		</ul>
 		<ul class="opts">
 			<li></li>
@@ -39,18 +42,34 @@ html, body, .wrap { height: 100%;}
 			<li></li>
 			<li></li>
 		</ul>
+		<div class="prev"><</div>
+		<div class="next">></div>
 	</div>
 
 <script type="text/javascript" src="vendor/jquery-1.7.2.min.js"></script>
-<script type="text/javascript" src="../dist/jprop.js"></script>
+<script type="text/javascript" src="../dist/jprop-debug.js"></script>
 <script type="text/javascript">
 $(function() {
 	$('.slider').swipeshow({
+		//切换按钮
 		opts: ".opts",
+		//滑动方向
 		dir: 'y',
+		//上一帧
+		prev: '.prev',
+		//下一帧
+		next: '.next',
+		//每次切换，添加给opts的子元素的class名
+		className: 'cur',
+		//opts子元素响应切换的事件类型
+		type: 'click',
+		//是否自动播放
+		auto: true,
+		//自动播放的时间间隔
+		speed:3000,
+		//每次切换时会调用的函数，第一个参数为第几帧
 		callback:function(i) {
-			var value =Math.random();
-			this.find('li').eq(i).text(value);
+			/*console.log(i);*/
 		}
 	});
 });
