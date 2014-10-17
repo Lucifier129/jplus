@@ -1,15 +1,22 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-	<meta charset="utf-8">
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 	<title>mobile-test</title>
-	<meta id="viewport" name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
-	<style type="text/css">a,abbr,acronym,address,applet,article,aside,audio,b,big,blockquote,body,canvas,caption,center,cite,code,dd,del,details,dfn,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,html,i,iframe,img,ins,kbd,label,legend,li,mark,menu,nav,object,ol,output,p,pre,q,ruby,s,samp,section,small,span,strike,strong,sub,summary,sup,table,tbody,td,tfoot,th,thead,time,tr,tt,u,ul,var,video{margin:0;padding:0;border:0;font:inherit;vertical-align:baseline}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:after,blockquote:before,q:after,q:before{content:"";content:none}table{border-collapse:collapse;border-spacing:0}a{text-decoration:none}a,button,input,textarea{-webkit-tap-highlight-color:rgba(255,255,255,0)}body{-webkit-text-size-adjust:none}a,img{-webkit-tap-highlight-color:rgba(255,255,255,0)}input:focus{outline:0}</style>
+	<meta id="viewport" name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
+	<style type="text/css">a,abbr,acronym,address,applet,article,aside,audio,b,big,blockquote,body,canvas,caption,center,cite,code,dd,del,details,dfn,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,html,i,iframe,img,ins,kbd,label,legend,li,mark,menu,nav,object,ol,output,p,pre,q,ruby,s,samp,section,small,span,strike,strong,sub,summary,sup,table,tbody,td,tfoot,th,thead,time,tr,tt,u,ul,var,video{margin:0;padding:0;border:0;font:inherit;vertical-align:baseline}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:after,blockquote:before,q:after,q:before{content:"";content:none}table{border-collapse:collapse;border-spacing:0}a{text-decoration:none}a,button,input,textarea{-webkit-tap-highlight-color:rgba(255,255,255,0)}body{-webkit-text-size-adjust:none}a,img{-webkit-tap-highlight-color:rgba(255,255,255,0)}input:focus{outline:0}
+	.clearfloat:before,.clearfloat:after {content:"";display:table;}
+.clearfloat:after { clear:both; }
+/* For IE 6/7 (trigger hasLayout) */
+.clearfloat { *zoom:1; }
+/* center class */
+.c-wrap { display: table; *writing-mode: tb-rl; }
+.c-inner { display: table-cell; vertical-align: middle; *width:100%; *margin:auto 0; *writing-mode:lr-tb;}</style>
 	<style type="text/css">
-	html { height: 200%; font-size: 16px;}
-	body { background: #ededed;}
+	html { font-size: 16px;}
+	body { background: #ededed; overflow: hidden;}
 	.fl { float: left;}
 	.fr { float: right;}
 	.hide { display: none;}
@@ -71,19 +78,31 @@
 		margin: 10px 0 10px 8px;
 	}
 	.user-info {
-		padding:8px 10px;
+		padding: 8px 11px;
+		display: -webkit-box;
+		display: -webkit-flex;
+		display: -ms-flexbox;
+		display: flex;
+		-webkit-box-direction: normal;
+		-webkit-box-orient: vertical;
+		-webkit-flex-direction: column;
+		-ms-flex-direction: column;
 		flex-direction: column;
 		-webkit-box-pack: center;
+		-ms-flex-pack: center;
+		-webkit-justify-content: center;
 		justify-content: center;
 		-webkit-box-flex: 1;
 		-webkit-flex: 1;
 		-ms-flex: 1;
 		flex: 1;
+		width: 100%;
 	}
 	.username {
 		overflow: hidden;
 		font-weight: 700;
 		line-height: 18px;
+		font-size: .9375rem;
 	}
 	.post-info {
 		line-height: 1rem;
@@ -96,7 +115,8 @@
 	.dorp-btn {
 		width: 60px;
 		text-align: center;
-		line-height: 60px;
+		height: 54px;
+		line-height: 54px;
 	}
 	.from {
 		margin-left: 10px;
@@ -127,7 +147,7 @@
 		padding: 6px 0;
 	}
 	.pic-list {
-
+		width: 248px;
 	}
 
 	.pic-list li {
@@ -139,7 +159,6 @@
 	.pic-list li img {
 		width: 76px;
 	height: 76px;
-	
 	}
 	</style>
 </head>
@@ -210,7 +229,107 @@
 				<div class="card-main">
 					<p>【10月16日17时头条新闻要闻回顾】习近平：不要搞奇奇怪怪的建筑；明夜起京津冀等地雾霾再起，局地有重度霾；香港占中引拥堵，周润发郭富城等被迫乘地铁；独家对话加藤嘉一：对中日关系不乐观不悲观；东莞官员被曝通奸 涉事女子称他把我当性伴侣(图)。详见：</p>
 					<div class="pic-list">
-						<ul>
+						<ul class="clearfloat">
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+						</ul>
+					</div>
+				</div>
+				<div class="card-footer layout-box">
+					<a href="javascript:void(0)">转发</a>
+					<a href="javascript:void(0)">评论</a>
+					<a href="javascript:void(0)">点赞</a>
+				</div>
+			</div>
+		</div>
+		<div class="card">
+				<div class="card-header layout-box">
+					<div class="pic"><img src="http://tp3.sinaimg.cn/2539961154/50/5680421967/1" alt="" width="34" height="34"></div>
+					<div class="user-info layout-box">
+						<div class="username">上海发布</div>
+						<div class="post-info"><span class="time">1分钟前</span><span class="from">来自微博 weibo.com</span></div>
+					</div>
+					<div class="dorp-btn">下拉</div>
+				</div>
+				<div class="card-main">
+					<p>【10月16日17时头条新闻要闻回顾】习近平：不要搞奇奇怪怪的建筑；明夜起京津冀等地雾霾再起，局地有重度霾；香港占中引拥堵，周润发郭富城等被迫乘地铁；独家对话加藤嘉一：对中日关系不乐观不悲观；东莞官员被曝通奸 涉事女子称他把我当性伴侣(图)。详见：</p>
+					<div class="pic-list">
+						<ul class="clearfloat">
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+						</ul>
+					</div>
+				</div>
+				<div class="card-footer layout-box">
+					<a href="javascript:void(0)">转发</a>
+					<a href="javascript:void(0)">评论</a>
+					<a href="javascript:void(0)">点赞</a>
+				</div>
+			</div>
+		</div>
+		<div class="card">
+				<div class="card-header layout-box">
+					<div class="pic"><img src="http://tp3.sinaimg.cn/2539961154/50/5680421967/1" alt="" width="34" height="34"></div>
+					<div class="user-info layout-box">
+						<div class="username">上海发布</div>
+						<div class="post-info"><span class="time">1分钟前</span><span class="from">来自微博 weibo.com</span></div>
+					</div>
+					<div class="dorp-btn">下拉</div>
+				</div>
+				<div class="card-main">
+					<p>【10月16日17时头条新闻要闻回顾】习近平：不要搞奇奇怪怪的建筑；明夜起京津冀等地雾霾再起，局地有重度霾；香港占中引拥堵，周润发郭富城等被迫乘地铁；独家对话加藤嘉一：对中日关系不乐观不悲观；东莞官员被曝通奸 涉事女子称他把我当性伴侣(图)。详见：</p>
+					<div class="pic-list">
+						<ul class="clearfloat">
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+						</ul>
+					</div>
+				</div>
+				<div class="card-footer layout-box">
+					<a href="javascript:void(0)">转发</a>
+					<a href="javascript:void(0)">评论</a>
+					<a href="javascript:void(0)">点赞</a>
+				</div>
+			</div>
+		</div>
+		<div class="card">
+				<div class="card-header layout-box">
+					<div class="pic"><img src="http://tp3.sinaimg.cn/2539961154/50/5680421967/1" alt="" width="34" height="34"></div>
+					<div class="user-info layout-box">
+						<div class="username">上海发布</div>
+						<div class="post-info"><span class="time">1分钟前</span><span class="from">来自微博 weibo.com</span></div>
+					</div>
+					<div class="dorp-btn">下拉</div>
+				</div>
+				<div class="card-main">
+					<p>【10月16日17时头条新闻要闻回顾】习近平：不要搞奇奇怪怪的建筑；明夜起京津冀等地雾霾再起，局地有重度霾；香港占中引拥堵，周润发郭富城等被迫乘地铁；独家对话加藤嘉一：对中日关系不乐观不悲观；东莞官员被曝通奸 涉事女子称他把我当性伴侣(图)。详见：</p>
+					<div class="pic-list">
+						<ul class="clearfloat">
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
+							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
 							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
 							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
 							<li><img src="http://ww2.sinaimg.cn/thumb180/85bdc80bjw1elczkz34faj20c80c8q3e.jpg"></li>
