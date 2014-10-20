@@ -139,7 +139,7 @@ MVVM.prototype = {
 				each(value, function(i) {
 					var item = target.eq(i);
 					if (!item.length) {
-						item = tpl.clone(true, true);
+						item = tpl.clone();
 						cloneArr.push(item[0]);
 					}
 					ret.push($method.apply(item, args.concat(this)));
