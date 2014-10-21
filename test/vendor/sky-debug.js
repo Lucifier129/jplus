@@ -125,11 +125,24 @@ var doc = document,
 	defineProperty,
 	createObj;
 
-if (isNative(Object.defineProperty) && isNative(Object.create)) {
+var def = {
+    'defineProperty': isNative(Object.defineProperty) && isNative(Object.create) && Object.defineProperty,
+    '__defineSetter__': isNative(Object.prototype.__defineSetter__) && Object.prototype.__defineSetter__,
+    '__defineGetter__': isNative(Object.prototype.__defineGetter__) && Object.prototype.__defineGetter__
+}
+
+if (!def.defineProperty && def.__defineSetter__) {
+    def.defineProperty = function(obj, propName, descriptor) {
+        def.__defineGetter__.call(obj, propName, descriptor.get);
+        def.__defineSetter__.call(obj, propName, descriptor.set);
+    };
+}
+
+if (def.defineProperty) {
 	defineProperty = function(obj, prop, callback) {
 		var value = obj[prop];
 		prop in obj && delete obj[prop];
-		Object.defineProperty(obj, prop, {
+		def.defineProperty(obj, prop, {
 			set: function(v) {
 				callback.call(this, prop, (value = v));
 			},
@@ -809,5 +822,8 @@ global.define = module.define = function(id, deps, factory) {
 	module.exports = exports;
 };
 
-global.define.amd = 'amd';
+global.define.amd = {
+	jQuery: true
+};
+
 }(this));
