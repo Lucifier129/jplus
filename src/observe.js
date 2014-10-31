@@ -224,7 +224,11 @@ var observer = {
 };
 
 
-
+/**@function observe
+*@param {object} 源对象
+*@param {object|function}  初始化侦听 等价于立即调用on方法
+*@returns {object} 被侦听了属性的对象
+*/
 $.observe = function(source, setters) {
     var model;
     if (!isObject(source)) return null;

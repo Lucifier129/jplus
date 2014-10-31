@@ -174,13 +174,20 @@ MVVM.prototype = {
 
 var mvvm = new MVVM();
 
-
-$.fn.refresh = function(model, opt) {
-
-	mvvm.extend({
-		model: model,
-		vmodel: this.getVM()
+/**@function refresh
+*@param {object|array} 数据模型 一个对象或多个
+*/
+$.fn.refresh = function(model) {
+	var self = this;
+	return isArray(model) ? this.each(function(i){
+		mvvm.extend({
+			model: model[i],
+			vmodel: self.eq(i).getVM()
+		});
+	}): this.each(function() {
+		mvvm.extend({
+			model: model,
+			vmodel: self.getVM()
+		});
 	});
-
-	return this;
 }

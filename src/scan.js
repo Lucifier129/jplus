@@ -70,6 +70,10 @@ function instantiation() {
 	return obj;
 }
 
+/*
+*@param {boolean} 再扫描 为true时重新扫描
+*@returns {object} 返回viewModel对象
+*/
 $.fn.getVM = function(rescan) {
 	var vmodel;
 	if (rescan || !(vmodel = this.data('vmodel'))) {
