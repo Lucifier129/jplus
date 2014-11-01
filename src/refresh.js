@@ -134,7 +134,7 @@ MVVM.prototype = {
 			case $method && isArr && multiple:
 				ret = [];
 				cloneArr = [];
-				tpl = target.eq(0);
+				tpl = target.eq(0).clone();
 				$method = $.fn[method];
 				each(value, function(i) {
 					var item = target.eq(i);

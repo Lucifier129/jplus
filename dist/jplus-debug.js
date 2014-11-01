@@ -304,7 +304,7 @@ MVVM.prototype = {
 			case $method && isArr && multiple:
 				ret = [];
 				cloneArr = [];
-				tpl = target.eq(0);
+				tpl = target.eq(0).clone();
 				$method = $.fn[method];
 				each(value, function(i) {
 					var item = target.eq(i);
@@ -350,15 +350,17 @@ var mvvm = new MVVM();
 $.fn.refresh = function(model) {
 	var self = this;
 	if (isArray(model)) {
-		console.log('arr');
+		var len = model.length;
 		this.each(function(i) {
+			if (i >= len) {
+				return false;
+			}
 			mvvm.extend({
 				model: model[i],
 				vmodel: self.eq(i).getVM()
 			});
 		})
 	} else if (isObject(model)) {
-		console.log('obj');
 		this.each(function() {
 			mvvm.extend({
 				model: model,
