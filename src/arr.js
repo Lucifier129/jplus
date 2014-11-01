@@ -1,4 +1,7 @@
-//arr
-var arr = [],
-	push = arr.push,
-	slice = arr.slice;
+define(function() {
+	var arr = [];
+	return {
+		push: arr.push,
+		slice: arr.slice
+	};
+});
