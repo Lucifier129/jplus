@@ -172,13 +172,12 @@ MVVM.prototype = {
 	}
 }
 
-var mvvm = new MVVM();
-
 /**@function refresh
  *@param {object|array} 数据模型 一个对象或多个
  */
 $.fn.refresh = function(model) {
 	var self = this;
+	var mvvm = new MVVM();
 	if (isArray(model)) {
 		var len = model.length;
 		this.each(function(i) {
