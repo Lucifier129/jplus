@@ -345,22 +345,29 @@ MVVM.prototype = {
 var mvvm = new MVVM();
 
 /**@function refresh
-*@param {object|array} 数据模型 一个对象或多个
-*/
+ *@param {object|array} 数据模型 一个对象或多个
+ */
 $.fn.refresh = function(model) {
 	var self = this;
-	return isArray(model) ? this.each(function(i){
-		mvvm.extend({
-			model: model[i],
-			vmodel: self.eq(i).getVM()
+	if (isArray(model)) {
+		console.log('arr');
+		this.each(function(i) {
+			mvvm.extend({
+				model: model[i],
+				vmodel: self.eq(i).getVM()
+			});
+		})
+	} else if (isObject(model)) {
+		console.log('obj');
+		this.each(function() {
+			mvvm.extend({
+				model: model,
+				vmodel: self.getVM()
+			});
 		});
-	}): this.each(function() {
-		mvvm.extend({
-			model: model,
-			vmodel: self.getVM()
-		});
-	});
-}
+	}
+	return this;
+};
 //observe.js
 var doc = document,
     head = doc.getElementsByTagName('head')[0],
