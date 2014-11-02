@@ -20,6 +20,9 @@ jQuery中的MV*模式
 <script type="text/javascript" src="jplus.js"></script>
 ```
 
+## 使用案例
+
+<a href="http://lucifier129.github.io/jplus/index.html" target="_blank">jPlus组件用例示范</a>
 
 ## API说明
 
