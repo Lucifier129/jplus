@@ -12,7 +12,6 @@ var toStr = Object.prototype.toString,
 	isString = function(obj) {
 		return toStr.call(obj) === '[object String]';
 	},
-	noop = function() {},
 	trim = $.trim,
 	each = $.each,
 	extend = $.extend,
