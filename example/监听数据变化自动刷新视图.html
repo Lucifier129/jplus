@@ -81,13 +81,15 @@ button { display:block; margin:0 auto; margin-bottom: 20px;}
 
 			count = (count + 1) % len;
 
-			//header 属性发生变化，自动刷新视图
+			//第一种：单独修改属性，自动刷新视图
 			model.header = '动态模板引擎 + 数据变化时自动刷新视图' + count;
+			model.info = data.info[count];
 
-			//调用 model 的 extend 方法批量改变属性值，自动刷新视图
-			model.extend({
+			//第二种：调用 extend 方法批量修改,自动刷新视图
+			/*model.extend({
+				header: '动态模板引擎 + 数据变化时自动刷新视图' + count,
 				info: data.info[count]
-			});
+			});*/
 
 		});
 	});
