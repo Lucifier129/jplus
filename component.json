@@ -1,7 +1,22 @@
 {
-  "name": "jplus",
-  "version": "1.0.0",
-  "dependencies": {
-    "jquery": "~1.7.2"
-  }
+	"name": "jplus",
+	"version": "1.0.0",
+	"main": "dist/jplus.js",
+	"license": "MIT",
+	"dependencies": {
+		"jquery": "~1.7.2"
+	},
+	"ignore": [
+		"examples",
+		"test",
+		"*.map",
+		"*.html",
+		"*.md",
+		"package.json"
+	],
+	"keywords": [
+		"jplus",
+		"mvvm",
+		"javascript"
+	]
 }
