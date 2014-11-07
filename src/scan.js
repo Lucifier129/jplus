@@ -32,7 +32,7 @@ scan.fn = scan.init.prototype = scan.prototype = extend(inherit($.fn), {
 		for (key in this) {
 			if (this.hasOwnProperty(key)) {
 				item = this[key];
-				item.removeAttr && item.removeAttr($.jplus.attr);
+				item.removeAttr && item.removeAttr($.plus.attr);
 				deep && delete this[key];
 			}
 		}
@@ -42,7 +42,7 @@ scan.fn = scan.init.prototype = scan.prototype = extend(inherit($.fn), {
 		if (/text/.test(node.nodeName)) return;
 		var self = this,
 			$node = $(node),
-			jsAttrValue = $node.attr($.jplus.attr);
+			jsAttrValue = $node.attr($.plus.attr);
 
 		if (jsAttrValue) {
 			each(parseJsAttr(jsAttrValue), function(prop) {
@@ -68,7 +68,7 @@ function walkTheDOM(node, func) {
 }
 
 function removeAttr(node) {
-	$(node).removeAttr($.jplus.attr);
+	$(node).removeAttr($.plus.attr);
 }
 
 function instantiation() {
