@@ -29,6 +29,20 @@ extend($.fn, {
 		return this;
 	},
 	/**
+	*@param {object} 嵌套数据模型
+	*/
+	rendering: function(models) {
+		$('[render]').each(function() {
+			var $this = $(this),
+				key = $this.attr('render'),
+				mod;
+			key in models
+			&& isObject(mod = models[key])
+			&& $this.render(mod);
+		});
+		return this;
+	},
+	/**
 	*@param {object} 数据模型 与refresh方法的参数相同
 	*@returns {object} 返回被侦听了属性变化的对象
 	*/
