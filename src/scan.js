@@ -1,11 +1,18 @@
 //scan
 //requrie arr.js/inherit.js/parseAttr.js/staticMethod.js
+
+$.plus = {
+	attr: 'js',
+	viewModel: []
+};
+
 function scan(node) {
 	return new scan.init(node);
 }
 
 scan.init = function(node) {
 	this[0] = node;
+	this.collect();
 }
 
 scan.fn = scan.init.prototype = scan.prototype = extend(inherit($.fn), {
@@ -25,7 +32,7 @@ scan.fn = scan.init.prototype = scan.prototype = extend(inherit($.fn), {
 		for (key in this) {
 			if (this.hasOwnProperty(key)) {
 				item = this[key];
-				item.removeAttr && item.removeAttr('js');
+				item.removeAttr && item.removeAttr($.jplus.attr);
 				deep && delete this[key];
 			}
 		}
@@ -35,7 +42,7 @@ scan.fn = scan.init.prototype = scan.prototype = extend(inherit($.fn), {
 		if (/text/.test(node.nodeName)) return;
 		var self = this,
 			$node = $(node),
-			jsAttrValue = $node.attr('js');
+			jsAttrValue = $node.attr($.jplus.attr);
 
 		if (jsAttrValue) {
 			each(parseJsAttr(jsAttrValue), function(prop) {
@@ -61,7 +68,7 @@ function walkTheDOM(node, func) {
 }
 
 function removeAttr(node) {
-	$(node).removeAttr('js');
+	$(node).removeAttr($.jplus.attr);
 }
 
 function instantiation() {
@@ -70,14 +77,29 @@ function instantiation() {
 	return obj;
 }
 
+var viewModels = $.plus.viewModel;
 /*
 *@param {boolean} 再扫描 为true时重新扫描
 *@returns {object} 返回viewModel对象
 */
 $.fn.getVM = function(rescan) {
-	var vmodel;
-	if (rescan || !(vmodel = this.data('vmodel'))) {
-		vmodel = this.data('vmodel', scan(this[0]).collect()).data('vmodel');
+	var elem = this[0],
+		viewIndex = elem['viewIndex'],
+		isNum = typeof viewIndex === 'number',
+		viewModel;
+
+	if (isNum && !rescan) {
+		return viewModels[viewIndex];
 	}
-	return vmodel;
+
+	viewModel = scan(elem);
+
+	if (isNum) {
+		viewModels.splice(viewIndex, 1, viewModel);
+	} else {
+		elem['viewIndex'] = viewModels.length;
+		viewModels.push(viewModel);
+	}
+
+	return viewModel;
 };
