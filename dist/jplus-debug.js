@@ -7,27 +7,26 @@
 ;(function($, undefined) {
 	'use strict';
 //arr
-var arr = [],
-	push = arr.push,
-	slice = arr.slice;
+var arr = [];
+var push = arr.push;
+var slice = arr.slice;
 //staticMethod
-var toStr = Object.prototype.toString,
-	isObject = function(obj) {
-		return obj == null ? obj : toStr.call(obj) === '[object Object]';
-	},
-	isArray = Array.isArray || function(obj) {
-		return toStr.call(obj) === '[object Array]';
-	},
-	isFunction = function(obj) {
-		return toStr.call(obj) === '[object Function]';
-	},
-	isString = function(obj) {
-		return toStr.call(obj) === '[object String]';
-	},
-	trim = $.trim,
-	each = $.each,
-	extend = $.extend,
-	inArray = $.inArray;
+var toStr = Object.prototype.toString;
+var isObject = isType('Object');
+var isFunction = isType('Function');
+var isString = isType('String');
+var isArray = Array.isArray || isType('Array');
+
+var trim = $.trim;
+var each = $.each;
+var extend = $.extend;
+var inArray = $.inArray;
+
+function isType(type) {
+	return function(obj) {
+		return toStr.call(obj) === '[object ' + type + ']';
+	};
+}
 //inherit
 var inherit = Object.create || function(proto) {
 	var F = function() {};
@@ -35,13 +34,9 @@ var inherit = Object.create || function(proto) {
 	return new F();
 };
 //parseAttr
-var SEMICOLON_RE = /[^;]+/g,
-	COLON_RE = /[^:]+/g,
-	DASH_RE = /[^-]+/g;
-
-function parseJsAttr(attrValue) {
-	return arrToObj(attrToArr(attrValue));
-}
+var SEMICOLON_RE = /[^;]+/g;
+var COLON_RE = /[^:]+/g;
+var DASH_RE = /[^-]+/g;
 
 function attrToArr(attrValue) {
 	var ret = trim(attrValue).match(SEMICOLON_RE);
@@ -83,6 +78,10 @@ function arrToObj(attrValueArr) {
 
 	});
 	return ret;
+}
+
+function parseJsAttr(attrValue) {
+	return arrToObj(attrToArr(attrValue));
 }
 //scan
 //requrie arr.js/inherit.js/parseAttr.js/staticMethod.js
@@ -391,13 +390,13 @@ $.fn.refresh = function(model) {
 	return this;
 };
 //observe.js
-var doc = document,
-    head = doc.getElementsByTagName('head')[0],
-    comment = doc.createComment('Kill IE6/7/8'),
-    NATIVE_RE = /\[native code\]/,
-    UNDEFINED = 'undefined',
-    defineSetter,
-    ES5;
+var doc = document;
+var head = doc.getElementsByTagName('head')[0];
+var comment = doc.createComment('Kill IE6/7/8');
+var NATIVE_RE = /\[native code\]/;
+var UNDEFINED = 'undefined';
+var defineSetter;
+var ES5;
 
 function nextTick(fn) {
     return setTimeout(fn, 4);
@@ -409,9 +408,13 @@ function randomStr() {
 
 
 var def = {
-    'defineProperty': NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create) && Object.defineProperty,
-    '__defineSetter__': NATIVE_RE.test(Object.prototype.__defineSetter__) && Object.prototype.__defineSetter__,
-    '__defineGetter__': NATIVE_RE.test(Object.prototype.__defineGetter__) && Object.prototype.__defineGetter__
+    'defineProperty':NATIVE_RE.test(Object.defineProperty)
+                            && NATIVE_RE.test(Object.create)
+                            && Object.defineProperty,
+    '__defineSetter__': NATIVE_RE.test(Object.prototype.__defineSetter__)
+                            && Object.prototype.__defineSetter__,
+    '__defineGetter__': NATIVE_RE.test(Object.prototype.__defineGetter__)
+                            && Object.prototype.__defineGetter__
 }
 
 if (!def.defineProperty && def.__defineSetter__) {

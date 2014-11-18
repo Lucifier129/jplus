@@ -1,11 +1,11 @@
 //observe.js
-var doc = document,
-    head = doc.getElementsByTagName('head')[0],
-    comment = doc.createComment('Kill IE6/7/8'),
-    NATIVE_RE = /\[native code\]/,
-    UNDEFINED = 'undefined',
-    defineSetter,
-    ES5;
+var doc = document;
+var head = doc.getElementsByTagName('head')[0];
+var comment = doc.createComment('Kill IE6/7/8');
+var NATIVE_RE = /\[native code\]/;
+var UNDEFINED = 'undefined';
+var defineSetter;
+var ES5;
 
 function nextTick(fn) {
     return setTimeout(fn, 4);
@@ -17,9 +17,13 @@ function randomStr() {
 
 
 var def = {
-    'defineProperty': NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create) && Object.defineProperty,
-    '__defineSetter__': NATIVE_RE.test(Object.prototype.__defineSetter__) && Object.prototype.__defineSetter__,
-    '__defineGetter__': NATIVE_RE.test(Object.prototype.__defineGetter__) && Object.prototype.__defineGetter__
+    'defineProperty':NATIVE_RE.test(Object.defineProperty)
+                            && NATIVE_RE.test(Object.create)
+                            && Object.defineProperty,
+    '__defineSetter__': NATIVE_RE.test(Object.prototype.__defineSetter__)
+                            && Object.prototype.__defineSetter__,
+    '__defineGetter__': NATIVE_RE.test(Object.prototype.__defineGetter__)
+                            && Object.prototype.__defineGetter__
 }
 
 if (!def.defineProperty && def.__defineSetter__) {

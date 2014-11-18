@@ -1,11 +1,7 @@
 //parseAttr
-var SEMICOLON_RE = /[^;]+/g,
-	COLON_RE = /[^:]+/g,
-	DASH_RE = /[^-]+/g;
-
-function parseJsAttr(attrValue) {
-	return arrToObj(attrToArr(attrValue));
-}
+var SEMICOLON_RE = /[^;]+/g;
+var COLON_RE = /[^:]+/g;
+var DASH_RE = /[^-]+/g;
 
 function attrToArr(attrValue) {
 	var ret = trim(attrValue).match(SEMICOLON_RE);
@@ -47,4 +43,8 @@ function arrToObj(attrValueArr) {
 
 	});
 	return ret;
+}
+
+function parseJsAttr(attrValue) {
+	return arrToObj(attrToArr(attrValue));
 }

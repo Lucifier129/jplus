@@ -1,18 +1,17 @@
 //staticMethod
-var toStr = Object.prototype.toString,
-	isObject = function(obj) {
-		return obj == null ? obj : toStr.call(obj) === '[object Object]';
-	},
-	isArray = Array.isArray || function(obj) {
-		return toStr.call(obj) === '[object Array]';
-	},
-	isFunction = function(obj) {
-		return toStr.call(obj) === '[object Function]';
-	},
-	isString = function(obj) {
-		return toStr.call(obj) === '[object String]';
-	},
-	trim = $.trim,
-	each = $.each,
-	extend = $.extend,
-	inArray = $.inArray;
+var toStr = Object.prototype.toString;
+var isObject = isType('Object');
+var isFunction = isType('Function');
+var isString = isType('String');
+var isArray = Array.isArray || isType('Array');
+
+var trim = $.trim;
+var each = $.each;
+var extend = $.extend;
+var inArray = $.inArray;
+
+function isType(type) {
+	return function(obj) {
+		return toStr.call(obj) === '[object ' + type + ']';
+	};
+}

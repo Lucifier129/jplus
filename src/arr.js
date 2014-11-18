@@ -1,4 +1,4 @@
 //arr
-var arr = [],
-	push = arr.push,
-	slice = arr.slice;
+var arr = [];
+var push = arr.push;
+var slice = arr.slice;
