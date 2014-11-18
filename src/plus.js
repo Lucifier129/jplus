@@ -3,8 +3,8 @@
 
 extend($.fn, {
 	/**
-	*@param {object|array} api  一个或多个包含jQ方法及其参数的对象
-	*/
+	 *@param {object|array} api  一个或多个包含jQ方法及其参数的对象
+	 */
 	render: function(api) {
 		var self = this,
 			$fn = $.fn;
@@ -29,23 +29,9 @@ extend($.fn, {
 		return this;
 	},
 	/**
-	*@param {object} 嵌套数据模型
-	*/
-	rendering: function(models) {
-		$('[render]').each(function() {
-			var $this = $(this),
-				key = $this.attr('render'),
-				mod;
-			key in models
-			&& isObject(mod = models[key])
-			&& $this.render(mod);
-		});
-		return this;
-	},
-	/**
-	*@param {object} 数据模型 与refresh方法的参数相同
-	*@returns {object} 返回被侦听了属性变化的对象
-	*/
+	 *@param {object} 数据模型 与refresh方法的参数相同
+	 *@returns {object} 返回被侦听了属性变化的对象
+	 */
 	listen: function(model) {
 		var self = this;
 		self.refresh(model);
@@ -58,10 +44,10 @@ extend($.fn, {
 });
 
 /**@function define
-*@param {string} 作用域选择器 合法的jquery选择器
-*@param {function} 回调函数 定义一个数据模型
-*@retruns {object} 返回被侦听了属性变化的对象
-*/
+ *@param {string} 作用域选择器 合法的jquery选择器
+ *@param {function} 回调函数 定义一个数据模型
+ *@retruns {object} 返回被侦听了属性变化的对象
+ */
 $.define = function(name, callback) {
 	var target = $(name),
 		model;
@@ -72,11 +58,21 @@ $.define = function(name, callback) {
 };
 
 
+$.render = function(models) {
+	$('[render]').each(function() {
+		var $this = $(this),
+		key = $this.attr('render'),
+		mod;
+		key in models && isObject(mod = models[key]) && $this.render(mod);
+	});
+	return this;
+};
+
 var $module = {
 	vmodel: {},
 	/**@function ready
-	*@param {function} 回调函数 当文档加载完毕vm扫描完毕时即调用
-	*/
+	 *@param {function} 回调函数 当文档加载完毕vm扫描完毕时即调用
+	 */
 	ready: function(callback) {
 		var self = this;
 		$(document).ready(function() {

@@ -129,41 +129,6 @@ ps:`html`标签中如果出现了`noscan`或`app`属性，该标签的子元素�
 
 <a href="http://jsbin.com/yoxezuzefepa/1/edit" target="_blank">`$.fn.refresh`的在线demo</a>
 
-###$.fn.rendering
-
-`render` 与 `frefresh` 都可以调用 `$.fn` 中的方法，`rendering` 则将 `js="render: obj"` 简化成 `render="obj"`；
-
-```html
-<div class="header" render="header"></div>
-<div class="main" render="main"></div>
-<div class="footer" render="footer"></div>
-```
-不是任意方法都可以如此简化，仅限于 `render` 方法。
-
-任意jQuery实例调用 `rendering` 方法都可以全局渲染 `render`，如下：
-
-```javascript
-//$('.footer').rendering(models)，一样可以渲染全部带有 [render] 属性的区域
-$("body").rendering({
-			header: {
-				html: '<h1>HEADER</h1>',
-				css:['color', '#333']
-			},
-			main: {
-				text: 'MAIN',
-				css: ['text-indent', '2em']
-			},
-			footer: {
-				html: '<p js="text:txt"></p>',
-				refresh: {
-					txt: 'FOOTER'
-				}
-			}
-		});
-```
-
-<a href="http://jsbin.com/vogecopaji/1/edit?html,js,output" target="_blank">`rendering` 方法的在线DEMO</a>
-
 ###$.fn.listen
 
 该方法的作用时，返回一个被侦听的对象，当其属性变化时，自动调用`refresh`方法
@@ -272,6 +237,36 @@ model.extend({
 除了操作传入的参数$scope外，直接返回一个对象也可以
 
 <a href="http://jsbin.com/xejivunekope/1/edit" target="_blank">`$.define`的在线demo</a>
+
+###$.render
+
+`$.render` 将 `js="render: obj"` 简化成 `render="obj"`；
+
+```html
+<div class="header" render="header"></div>
+<div class="main" render="main"></div>
+<div class="footer" render="footer"></div>
+```
+不是任意方法都可以如此简化，仅限于 `render` 方法。
+
+```javascript
+		$.render({
+			header: {
+				html: '<h1>HEADER</h1>',
+				css:['color', '#333']
+			},
+			main: {
+				text: 'MAIN',
+				css: ['text-indent', '2em']
+			},
+			footer: {
+				html: '<p js="text:txt"></p>',
+				refresh: {
+					txt: 'FOOTER'
+				}
+			}
+		});
+```
 
 ###$.module
 
