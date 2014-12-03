@@ -1,734 +1,1003 @@
-/*==================================================
- Copyright 2014 Jade Gu
- http://weibo.com/islucifier
- Released under the MIT license
-2014.10.06
- ==================================================*/
-;(function($, undefined) {
-	'use strict';
-//arr
-var arr = [];
-var push = arr.push;
-var slice = arr.slice;
-//staticMethod
-var toStr = Object.prototype.toString;
-var isObject = isType('Object');
-var isFunction = isType('Function');
-var isString = isType('String');
-var isArray = Array.isArray || isType('Array');
+/**
+ *File: jplus.js
+ *Author: Jade
+ *Date: 2014.11.20
+ */
+! function(global, undefined) {
 
-var trim = $.trim;
-var each = $.each;
-var extend = $.extend;
-var inArray = $.inArray;
+//agent
+function calling(fn) {
+	return function() {
+		return Function.prototype.call.apply(fn, arguments)
+	}
+}
+
+var objProto = Object.prototype
+var toStr = calling(objProto.toString)
+var hasOwn = calling(objProto.hasOwnProperty)
+var slice = calling(Array.prototype.slice)
+
 
 function isType(type) {
 	return function(obj) {
-		return toStr.call(obj) === '[object ' + type + ']';
-	};
-}
-//inherit
-var inherit = Object.create || function(proto) {
-	var F = function() {};
-	F.prototype = proto;
-	return new F();
-};
-//parseAttr
-var SEMICOLON_RE = /[^;]+/g;
-var COLON_RE = /[^:]+/g;
-var DASH_RE = /[^-]+/g;
-
-function attrToArr(attrValue) {
-	var ret = trim(attrValue).match(SEMICOLON_RE);
-	return each(ret, function(i, value) {
-		var item = ret[i] = trim(value).match(COLON_RE);
-		item[0] = trim(item[0]);
-		item[1] && (item[1] = trim(item[1]));
-		if (item[0].indexOf('-') !== -1) {
-			item[0] = trim(item[0]).match(DASH_RE);
-		}
-
-	});
-}
-
-function arrToObj(attrValueArr) {
-	var ret = {};
-	each(attrValueArr, function() {
-		var item = this;
-
-		switch (true) {
-			case item.length === 1:
-				ret[item[0]] = {};
-				break;
-			case isArray(item[0]):
-				ret[item[1]] = {
-					method: item[0][0],
-					args: item[0].slice(1)
-				};
-				break;
-			case item[0] in $.fn:
-				ret[item[1]] = {
-					method: item[0],
-					args: arr
-				};
-				break;
-			default:
-				ret[item[0]] = {};
-		}
-
-	});
-	return ret;
-}
-
-function parseJsAttr(attrValue) {
-	return arrToObj(attrToArr(attrValue));
-}
-//scan
-//requrie arr.js/inherit.js/parseAttr.js/staticMethod.js
-
-$.plus = {
-	attr: 'js',
-	viewModel: []
-};
-
-function scan(node) {
-	return new scan.init(node);
-}
-
-scan.init = function(node) {
-	this[0] = node;
-	this.collect();
-}
-
-scan.fn = scan.init.prototype = scan.prototype = extend(inherit($.fn), {
-	rescan: function() {
-		return this.clean().collect();
-	},
-	collect: function(base) {
-		var self = this;
-		walkTheDOM(base || this[0], function(node) {
-			return self.getAttr(node);
-		});
-		return this;
-	},
-	clean: function(deep) {
-		var item,
-			key;
-		for (key in this) {
-			if (this.hasOwnProperty(key)) {
-				item = this[key];
-				item.removeAttr && item.removeAttr($.plus.attr);
-				deep && delete this[key];
-			}
-		}
-		return this;
-	},
-	getAttr: function(node) {
-		if (/text/.test(node.nodeName)) return;
-		var self = this,
-			$node = $(node),
-			jsAttrValue = $node.attr($.plus.attr);
-
-		if (jsAttrValue) {
-			each(parseJsAttr(jsAttrValue), function(prop) {
-				var instance = self.hasOwnProperty(prop) && self[prop];
-				if (!instance) {
-					instance = self[prop] = instantiation();
-					extend(instance, this);
-				}
-				instance[instance.length++] = node;
-			});
-		}
-		if ($node.attr('noscan') !== undefined && $node.attr('app') && node !== self[0]) return true;
-	}
-});
-
-function walkTheDOM(node, func) {
-	if (func(node)) return;
-	node = node.firstChild;
-	while (node) {
-		walkTheDOM(node, func);
-		node = node.nextSibling;
+		return obj == null ? obj : toStr(obj) === '[object ' + type + ']'
 	}
 }
 
-function removeAttr(node) {
-	$(node).removeAttr($.plus.attr);
+var isObj = isType('Object')
+var isStr = isType('String')
+var isFn = isType('Function')
+var isArr = Array.isArray || isType('Array')
+
+if (!String.prototype.trim) {
+	var rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g
+	String.prototype.trim = function() {
+		return this.replace(rtrim, '')
+	}
 }
 
-function instantiation() {
-	var obj = inherit($.fn);
-	obj.length = 0;
-	return obj;
-}
 
-var viewModels = $.plus.viewModel;
-/*
-*@param {boolean} 再扫描 为true时重新扫描
-*@returns {object} 返回viewModel对象
-*/
-$.fn.getVM = function(rescan) {
-	var elem = this[0],
-		viewIndex = elem['viewIndex'],
-		isNum = typeof viewIndex === 'number',
-		viewModel;
+var _ = {
+	keys: Object.keys || function(obj) {
 
-	if (isNum && !rescan) {
-		return viewModels[viewIndex];
-	}
-
-	viewModel = scan(elem);
-
-	if (isNum) {
-		viewModels.splice(viewIndex, 1, viewModel);
-	} else {
-		elem['viewIndex'] = viewModels.length;
-		viewModels.push(viewModel);
-	}
-
-	return viewModel;
-};
-//refresh
-//requrie scan.js
-function isMultipleArgs(arr) {
-	if (!isArray(arr)) return false;
-
-	var len = arr.length,
-		type,
-		i;
-	if (len > 1) {
-		type = $.type(arr[0]);
-		for (i = len - 1; i >= 0; i--) {
-			if ($.type(arr[i]) !== type) return false;
-		}
-		return true;
-	}
-	return false;
-}
-
-//refre to http://stackoverflow.com/questions/1068834/object-comparison-in-javascript
-function deepCompare() {
-	var i, l, leftChain, rightChain;
-
-	function compare2Objects(x, y) {
-		var p;
-
-		if (isNaN(x) && isNaN(y) && typeof x === 'number' && typeof y === 'number') return true;
-		if (x === y) return true;
-
-		if ((typeof x === 'function' && typeof y === 'function') ||
-			(x instanceof Date && y instanceof Date) ||
-			(x instanceof RegExp && y instanceof RegExp) ||
-			(x instanceof String && y instanceof String) ||
-			(x instanceof Number && y instanceof Number)) {
-			return x.toString() === y.toString();
+		if (!isObj(obj)) {
+			return []
 		}
 
-		if (!(x instanceof Object && y instanceof Object)) return false;
+		var keys = []
 
-		if (x.isPrototypeOf(y) || y.isPrototypeOf(x)) return false;
-
-
-		if (x.constructor !== y.constructor) return false;
-
-		if (x.prototype !== y.prototype) return false;
-
-		if (inArray(x, leftChain) > -1 || inArray(y, rightChain) > -1) return false;
-
-		for (p in y) {
-			if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
-				return false;
-			} else if (typeof y[p] !== typeof x[p]) {
-				return false;
+		for (var key in obj) {
+			if (hasOwn(obj, key)) {
+				keys.push(key)
 			}
 		}
 
-		for (p in x) {
-			if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
-				return false;
-			} else if (typeof y[p] !== typeof x[p]) {
-				return false;
-			}
+		return keys
 
-			switch (typeof(x[p])) {
-				case 'object':
-				case 'function':
-
-					leftChain.push(x);
-					rightChain.push(y);
-
-					if (!compare2Objects(x[p], y[p])) return false;
-
-					leftChain.pop();
-					rightChain.pop();
-					break;
-
-				default:
-					if (x[p] !== y[p]) return false;
-					break;
-			}
-		}
-
-		return true;
-	}
-
-	if (arguments.length < 1) return true;
-
-	for (i = 1, l = arguments.length; i < l; i++) {
-
-		leftChain = [];
-		rightChain = [];
-		if (!compare2Objects(arguments[0], arguments[i])) return false;
-	}
-	return true;
-}
-
-$.compare = deepCompare;
-
-function MVVM(source) {
-	isObject(source) && extend(this, source);
-}
-
-MVVM.prototype = {
-	each: each,
-	extend: function(source) {
-		return extend(this, source).refresh();
 	},
-	refresh: function() {
-		var self = this;
-		self.each(self.model, function(prop, value) {
-			if (!(prop in self.vmodel)) return;
-			self.render(prop, value);
-		});
-		return self;
+
+	values: function(obj) {
+
+		var keys = this.keys(obj)
+		var len = keys.length
+		var values = new Array(len)
+
+		for (var i = 0; i < len; i += 1) {
+			values[i] = obj[keys[i]]
+		}
+
+		return values
 	},
-	render: function(prop, value) {
-		var model = this.model,
-			oldModel = this.oldModel,
-			vmodel = this.vmodel,
-			target = vmodel[prop],
-			method = target.method,
-			args = target.args,
-			$method = method in $.fn,
-			isArr = isArray(value),
-			multiple = isArr ? isMultipleArgs(value) : false,
-			cloneArr,
-			tpl,
-			ret;
 
+	invert: function(obj) {
+		var ret = {}
+		var keys = this.keys(obj)
 
-		if (deepCompare(target.oldValue, value)) return;
-		target.oldValue = value;
-
-		switch (true) {
-			case $method && isArr && multiple:
-				ret = [];
-				cloneArr = [];
-				tpl = target.eq(0).clone();
-				$method = $.fn[method];
-				each(value, function(i) {
-					var item = target.eq(i);
-					if (!item.length) {
-						item = tpl.clone();
-						cloneArr.push(item[0]);
-					}
-					ret.push($method.apply(item, args.concat(this)));
-				});
-
-				if (cloneArr.length) {
-					target.eq(-1).after(cloneArr);
-					push.apply(target, cloneArr);
-				}
-
-				break;
-
-			case $method:
-				ret = $.fn[method].apply(target, args.concat(value));
-				break;
-
-			default:
-				method = value;
-				args = method.args || arr;
-				args = isArray(args) ? args : [args];
-				multiple = isMultipleArgs(args);
-
-				each(target, function(i) {
-					method.apply($(this), multiple ? args[i] : args);
-				});
+		for (var i = 0, len = keys.len; i < len; i++) {
+			ret[obj[keys[i]]] = keys[i]
 		}
-		if (method === 'listen') {
-			model[prop] = ret;
-		}
-	}
-}
 
-/**@function refresh
- *@param {object|array} 数据模型 一个对象或多个
- */
-$.fn.refresh = function(model) {
-	var self = this;
-	var mvvm = new MVVM();
-	if (isArray(model)) {
-		var len = model.length;
-		this.each(function(i) {
-			if (i >= len) {
-				return false;
+		return ret
+	},
+
+	parse: function(descri) {
+		if (!isStr(descri)) {
+			return {}
+		}
+		var ret = {}
+		var group = descri.trim().split(';')
+		each(group, function(value) {
+			value = value.trim().split(':')
+			if (value.length < 2) {
+				return
 			}
-			mvvm.extend({
-				model: model[i],
-				vmodel: self.eq(i).getVM()
-			});
+			ret[value[1].trim()] = value[0].trim()
 		})
-	} else if (isObject(model)) {
-		this.each(function() {
-			mvvm.extend({
-				model: model,
-				vmodel: self.getVM()
-			});
-		});
+
+		return ret
 	}
-	return this;
-};
+}
+
+function each(obj, fn, context, useForIn) {
+	if (obj == undefined || !isFn(fn)) {
+		return obj
+	}
+	var len = obj.length
+	var ret
+
+	if (len === +len && len > 0 && !useForIn) {
+		for (var i = 0; i < len; i += 1) {
+			ret = fn.call(context || global, obj[i], i, obj)
+			if (ret !== undefined) {
+				return ret
+			}
+		}
+		return obj
+	}
+	for (var key in obj) {
+		if (hasOwn(obj, key)) {
+			ret = fn.call(context || global, obj[key], key, obj)
+			if (ret !== undefined) {
+				return ret
+			}
+		}
+	}
+
+	return obj
+}
+
+function extend() {
+	var target = arguments[0]
+	var deep
+
+	if (typeof target === 'boolean') {
+		deep = target
+		target = arguments[1]
+	}
+
+	if (typeof target !== 'object' && !isFn(target)) {
+		return target
+	}
+	var sourceList = slice(arguments, deep ? 2 : 1)
+
+	each(sourceList, function(source) {
+
+		if (typeof source !== 'object') {
+			return
+		}
+
+		each(source, function(value, key) {
+
+			if (deep && typeof value === 'object') {
+				var oldValue = target[key]
+
+				target[key] = typeof oldValue === 'object' ? oldValue : {}
+
+				return extend(deep, target[key], value)
+			}
+
+			target[key] = value
+		})
+	})
+
+	return target
+
+}
+
+function isSameType(arr) {
+	if (!isArr(arr)) {
+		return false
+	}
+	var len = arr.length
+	var type
+	var i
+	if (len > 1) {
+		type = toStr(arr[0])
+		for (i = len - 1; i >= 0; i--) {
+			if (toStr(arr[i]) !== type) {
+				return false
+			}
+		}
+		return true
+	}
+	return false
+}
+
+var inherit = Object.create || function(proto) {
+	var F = function() {}
+	F.prototype = proto
+	return new F()
+}
+
+function invoke(fn, args, context) {
+	return fn[isArr(args) ? 'apply' : 'call'](context || global, args);
+}
+
+function New(constructor) {
+	var instance
+
+	if (!isFn(constructor)) {
+
+		instance = typeof constructor === 'object' ? constructor : {}
+
+	} else {
+
+		instance = inherit(constructor.prototype)
+		instance = constructor.apply(instance, slice(arguments, 1)) || instance
+
+	}
+
+	return instance
+}
+
+
+function mix(source) {
+	var instance = mix.instance
+	var alias = mix.alias
+	var ret = {}
+	var oldValue
+
+	each(source, function(value, prop) {
+
+		var oldValue = instance[prop]
+		var retValue
+
+		if (oldValue === undefined) {
+			if (prop in alias) {
+				oldValue = instance[prop = alias[prop]]
+			}
+		}
+
+		if (isFn(oldValue)) {
+
+			if (isSameType(value)) {
+				ret[prop] = []
+				each(value, function(v) {
+					retValue = invoke(oldValue, v, instance)
+					if (retValue !== undefined) {
+						ret[prop].push(retValue)
+					}
+				})
+			} else {
+				retValue = invoke(oldValue, value, instance)
+				if (retValue !== undefined) {
+					ret[prop] = retValue
+				}
+			}
+
+		} else if (typeof oldValue === 'object' && typeof value === 'object') {
+			extend(oldValue, value)
+		} else {
+			instance[prop] = value
+		}
+
+	}, global, true)
+
+	return ret
+}
+
+
+
+function createProxy() {
+	var instance = New.apply(global, arguments)
+	var alias = inherit(createProxy.alias)
+
+	return extend(function(source) {
+		if (source === undefined) {
+			return instance
+		}
+		var ret
+		mix.instance = instance
+		mix.alias = alias
+
+		if (isArr(source)) {
+			ret = []
+			each(source, function(src) {
+				if (typeof src === 'object') {
+					ret.push(mix(src))
+				}
+			})
+		} else if (typeof source === 'object') {
+			ret = mix(source)
+		}
+
+		return ret
+	}, {
+		alias: alias
+	})
+}
+
+createProxy.alias = inherit({
+	extend: function(source) {
+		return extend(this, source)
+	},
+
+	each: function(fn) {
+		return each(this, fn)
+	},
+
+	keys: function() {
+		return _.keys(this)
+	},
+
+	values: function() {
+		return _.values(this)
+	},
+
+	invert: function() {
+		return _.invert(this)
+	},
+
+	parse: function(descri) {
+		return this.extend(_.parse(descri))
+	}
+})
 //observe.js
-var doc = document;
-var head = doc.getElementsByTagName('head')[0];
-var comment = doc.createComment('Kill IE6/7/8');
-var NATIVE_RE = /\[native code\]/;
-var UNDEFINED = 'undefined';
-var defineSetter;
-var ES5;
 
-function nextTick(fn) {
-    return setTimeout(fn, 4);
+function throwErr(msg) {
+	throw new Error(msg)
 }
 
-function randomStr() {
-    return Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
+function randomStr(prefix) {
+	return prefix + Math.random().toString(36).substr(2)
+}
+
+var nextTick = function(fn) {
+	return setTimeout(fn, 0)
 }
 
 
-var def = {
-    'defineProperty':NATIVE_RE.test(Object.defineProperty)
-                            && NATIVE_RE.test(Object.create)
-                            && Object.defineProperty,
-    '__defineSetter__': NATIVE_RE.test(Object.prototype.__defineSetter__)
-                            && Object.prototype.__defineSetter__,
-    '__defineGetter__': NATIVE_RE.test(Object.prototype.__defineGetter__)
-                            && Object.prototype.__defineGetter__
+var doc = document
+var head = doc.getElementsByTagName('head')[0]
+var comment = doc.createComment('Kill IE6/7/8')
+var NATIVE_RE = /\[native code\]/
+var ES5
+
+if (!Array.prototype.indexOf) {
+	Array.prototype.indexOf = function(value) {
+		for (var i = this.length - 1; i >= 0; i--) {
+			if (this[i] === value) {
+				return i
+			}
+		}
+		return -1
+	}
 }
 
-if (!def.defineProperty && def.__defineSetter__) {
-    def.defineProperty = function(obj, propName, descriptor) {
-        def.__defineGetter__.call(obj, propName, descriptor.get);
-        def.__defineSetter__.call(obj, propName, descriptor.set);
-    };
+var defineProperty
+
+if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
+	defineProperty = Object.defineProperty
+} else if (NATIVE_RE.test(Object.prototype.__defineSetter__)) {
+	defineProperty = function(obj, propName, descriptor) {
+		obj.__defineGetter__(propName, descriptor.get)
+		obj.__defineSetter__(propName, descriptor.set)
+	}
 }
 
-if (def.defineProperty) {
-    ES5 = true;
-    defineSetter = function(obj, propName, setter) {
-        var value = obj[propName] || UNDEFINED,
-            status = true;
+var observeProperty
 
-        var trigger = function() {
-            setter.call(obj, value, propName, obj.$$oldValues[propName]);
-            obj.$$oldValues[propName] = value;
-            status = true;
-            trigger = function() {
-                var oldValue = obj.$$oldValues[propName];
-                status = true;
-                if (deepCompare(oldValue, value)) return;
-                setter.call(obj, value, propName, oldValue);
-                obj.$$oldValues[propName] = value;
-            }
-        }
-        delete obj[propName];
-        def.defineProperty(obj, propName, {
-            get: function() {
-                return value;
-            },
-            set: function(v) {
-                value = v;
-                if (!status) return;
-                status = false;
-                nextTick(trigger);
-            }
-        });
-    };
+if (defineProperty) {
+	ES5 = true
+	observeProperty = function(obj, propName) {
+		var events = obj.__events__
+		if (propName in events) {
+			return
+		}
+		var value = obj[propName]
+		var oldValue
+		var holding
+
+		function trigger() {
+			each(events[propName], function(callbacks) {
+				each(callbacks, function(callback) {
+					callback.call(obj, value, propName, oldValue)
+				})
+			})
+			oldValue = typeof value === 'object' ? isArr(value) ? value.concat() : extend(true, {}, value) : value
+			holding = false
+		}
+
+		defineProperty(obj, propName, {
+			get: function() {
+				return value
+			},
+			set: function(v) {
+				value = v
+				if (holding || _.isEqual(v, oldValue)) {
+					return
+				}
+				holding = true
+				nextTick(trigger)
+			}
+		})
+	}
 } else if ('onpropertychange' in head) {
-    defineSetter = function(obj, propName, setter) {
-        var status;
-        if (obj.onpropertychange) return;
-        status = {};
-        obj.onpropertychange = function(e) {
-            var self = this,
-                attrName = (e || window.event).propertyName;
+	observeProperty = function(obj, propName) {
+		if (obj.onpropertychange) {
+			return
+		}
+		var oldValues = {}
+		var holding = {}
 
-            if (!(attrName in this.$$setters)) return;
-            if (status[attrName] === undefined) {
-                status[attrName] = true;
-                setter.call(self, self[attrName], attrName, self.$$oldValues[attrName]);
-                self.$$oldValues[attrName] = self[attrName];
-                return;
-            }
-            if (!status[attrName]) return;
+		function trigger(propName, events) {
+			var oldValue = oldValues[propName]
+			var value = obj[propName]
+			if (_.isEqual(value, oldValue)) {
+				return
+			}
+			each(events, function(callbacks) {
+				each(callbacks, function(callback) {
+					callback.call(obj, value, propName, oldValue)
+				})
+			})
+			oldValues[propName] = typeof value === 'object' ? isArr(value) ? value.concat() : extend(true, {}, value) : value
+			holding[propName] = false
+		}
 
-            status[attrName] = false;
-            nextTick(function() {
-                var oldValue = self.$$oldValues[attrName];
-                status[attrName] = true;
-                 if (deepCompare(oldValue, self[attrName])) return;
-                setter.call(self, self[attrName], attrName, oldValue);
-                self.$$oldValues[attrName] = self[attrName];
-            });
-        };
-    };
-}
-
-function observeProp(obj, propName, setter) {
-    var name = propName.split('.');
-    propName = name[0];
-    name = name[1];
-    if (!(propName in obj.$$setters)) {
-        obj.$$setters[propName] = {};
-        defineSetter(obj, propName, function(value, key, oldValue) {
-            var self = this;
-            each(self.$$setters[key], function() {
-                this.call(self, value, key, oldValue);
-            });
-        });
-    }
-    obj.$$setters[propName][name || 'observe' + randomStr()] = setter;
-    return obj;
+		obj.onpropertychange = function(e) {
+			e = e || window.event
+			var propName = e.propertyName
+			var events = this.__events__
+			if (propName in events) {
+				if (holding[propName]) {
+					return
+				}
+				holding[propName] = true
+				nextTick(function() {
+					trigger(propName, events[propName])
+				})
+			}
+		}
+	}
 }
 
 function checkPropName(propName) {
-    if ($.ES5) return;
-    if (propName in comment) {
-        throw new Error(
-            'If you want to support IE6/7/8. The property name [' + propName + '] can not be observed, ' +
-            'because DOM has the same property name. ' +
-            'You can use the [jQuery.ES5 = true] to ignore IE6/7/8.'
-        );
-    }
+	if (createObserver.ES5) {
+		return
+	}
+	if (propName in comment) {
+		throw new Error(
+			'If you want to support IE6/7/8. The property name [' + propName + '] can not be observed, ' +
+			'because DOM has the same property name. ' +
+			'You can use the [jQuery.ES5 = true] to ignore IE6/7/8.'
+		)
+	}
 }
 
 
-
 var observer = {
-    $$proto: {
-        add: function(propName, value) {
-            this[propName] = value || UNDEFINED;
-            this.$$oldValues[propName] = '$.observe' + randomStr();
-            return this;
-        },
-        remove: function(propName) {
-            delete this.$$oldValues[propName];
-            if ('onpropertychange' in this && this.nodeName !== undefined) {
-                this.removeAttribute(propName);
-            } else {
-                delete this[propName];
-            }
-            return this;
-        },
-        on: function() {
-            var self = this,
-                args = slice.call(arguments);
+	filter: '__events__ _add _remove on off offAll each extend once hold filter'.split(' '),
 
-            if (args.length === 1) {
-                args = args[0];
-                if (isObject(args)) {
-                    each(args, function(propName, setter) {
-                        checkPropName(propName);
-                        observeProp(self, propName, setter);
-                    });
-                } else if (isFunction(args)) {
-                    self.each(function(propName) {
-                        checkPropName(propName);
-                        observeProp(self, propName, args);
-                    });
-                }
-            } else if (args.length === 2 && isString(args[0]) && isFunction(args[1])) {
-                checkPropName(args[0]);
-                observeProp(self, args[0], args[1]);
-            }
+	_add: function(prop, callback, name) {
+		checkPropName(prop)
+		observeProperty(this, prop)
+		name = name || randomStr('observer')
+		this.__events__[prop] = this.__events__[prop] || {}
+		this.__events__[prop][name] = this.__events__[prop][name] || []
+		this.__events__[prop][name].push(callback)
+		return this
+	},
+	on: function() {
+		var that = this
+		var args = slice(arguments)
+		var argsLen = args.length
+		var arg
 
-            return this;
-        },
-        off: function() {
-            var self = this,
-                args = slice.call(arguments);
+		if (argsLen === 1) {
+			if (isObj(arg = args[0])) {
+				each(arg, function(callback, prop) {
+					that.on(prop, callback)
+				})
+			} else if (isFn(arg)) {
+				this.each(function(value, prop) {
+					that._add(prop, arg, '__all__')
+				})
+			}
+		} else if (argsLen === 2) {
+			if (!isFn(arg[1])) {
+				return this
+			}
+			if (isStr(arg = arg[0])) {
+				var index = arg.indexOf('.')
+				if (index <= 0) {
+					this._add(arg, args[1])
+				} else {
+					this._add(arg.substr(0, index), args[1], arg.substr(index + 1))
+				}
+			} else if (isArr(arg)) {
+				each(arg, function(prop) {
+					that.on(prop, arg[1])
+				})
+			}
+		}
+		return this
+	},
 
-            if (args.length === 0) {
-                each(self.$$setters, function(key) {
-                    self.$$setters[key] = {};
-                });
-            } else if (args.length >= 1) {
-                each(args, function() {
-                    var index = this.indexOf('.'),
-                        propName,
-                        name;
-                    if (index === 0) {
-                        name = this.substr(1);
-                        each(self.$$setters, function() {
-                            name in this && delete this[name];
-                        });
-                    } else if (index > 0) {
-                        propName = this.substr(0, index);
-                        name = this.substr(index + 1);
-                        name in self.$$setters[propName] && delete self.$$setters[propName][name];
-                    } else if (this in self.$$setters) {
-                        self.$$setters[this] = {};
-                    }
-                });
-            }
-            return this;
-        },
-        each: function(callback) {
-            var self = this;
-            each(self.$$oldValues, function(key) {
-                callback.call(self, key, self[key]);
-            });
-            return this;
-        },
-        extend: function() {
-            return extend.apply(null, [this].concat(slice.call(arguments)));
-        }
-    },
-    init: ES5 ? function(source) {
-        var target = inherit(this.$$proto),
-            oldValues = target.$$oldValues = {};
-        target.$$setters = {};
-        for (var key in source) {
-            if (source.hasOwnProperty(key)) {
-                oldValues[key] = target[key] = source[key];
-            }
-        }
-        return target;
-    } : function(source) {
-        var target = head.appendChild(doc.createComment('[object Object]')),
-            oldValues = target.$$oldValues = {};
-        extend(target, this.$$proto).$$setters = {};
-        for (var key in source) {
-            if (source.hasOwnProperty(key)) {
-                oldValues[key] = target[key] = source[key];
-            }
-        }
-        return target;
-    }
+	_remove: function(prop, callback, name) {
+		var callbacks = this.__events__[prop][name] || []
+		var index = callbacks.indexOf(callback)
+		if (index !== -1) {
+			callbacks.splice(index, 1)
+		}
+		return this
+	},
+
+	off: function() {
+		var that = this
+		var args = slice(arguments)
+		var argsLen = args.length
+		var arg
+		var index
+
+		if (!argsLen) {
+			this.__events__ = {}
+		} else if (argsLen === 1) {
+			if (isFn(arg = argsLen[0])) {
+				each(this.__events__, function(eventsList, prop) {
+					each(eventsList, function(callbacks, name) {
+						that._remove(prop, arg, name)
+					})
+				})
+			} else if (isStr(arg)) {
+				index = arg.index('.')
+				if (index <= 0) {
+					this.__events__[arg] = {}
+				} else {
+					delete this.__events__[arg.substr(0, index)][arg.substr(index + 1)]
+				}
+			}
+		} else if (argsLen === 2) {
+			if (!isFn(args[1])) {
+				this.off(args[0])
+				return this
+			}
+			if (isStr(arg = args[0])) {
+				index = arg.index('.')
+				if (index <= 0) {
+					each(this.__events__[arg], function(callbacks, name) {
+						that._remove(arg, args[1], name)
+					})
+				} else {
+					this._remove(arg.substr(0, index), args[1], arg.substr(index + 1))
+				}
+			} else if (isArr(arg)) {
+				each(arg, function(prop) {
+					that.off(prop, args[1])
+				})
+			}
+		}
+
+		return this
+	},
+
+	offAll: function() {
+		var that = this
+		each(this.__events__, function(eventsList, prop) {
+			that.off([prop, '__all__'].join('.'))
+		})
+		return this
+	},
+
+	each: function(fn) {
+		var that = this
+
+		if (this.nodeName) {
+			for (var prop in this) {
+				if (that.filter.indexOf(prop) === -1 && !(prop in comment)) {
+					fn.call(that, this[prop], prop)
+				}
+			}
+		} else {
+			each(this, function(value, prop) {
+				if (that.filter.indexOf(prop) === -1) {
+					fn.call(that, value, prop)
+				}
+			})
+		}
+
+
+		return this
+	},
+
+	extend: function() {
+		return extend.apply(global, [this].concat(slice(arguments)))
+	},
+
+	once: function(prop, callback) {
+		var that = this
+		prop += ".once"
+
+		function wrapper() {
+			callback.apply(that, arguments)
+			that.off(prop, callback)
+		}
+		this.on(prop, wrapper)
+	},
+
+	hold: function(prop, times, callback) {
+
+		if (!(times === +times && times >= 0)) {
+			throwErr(times + '不是一个正整数')
+		}
+
+		var that = this
+
+		function wrapper() {
+			if (--times <= 0) {
+				callback.apply(that, arguments)
+			}
+		}
+
+		this._add(prop, wrapper)
+
+		return wrapper
+
+	}
+}
+
+var createObserver = ES5 ? function(source, setters) {
+	if (!isObj(source)) {
+		return {}
+	}
+	var result = extend(inherit(observer), source, {
+		__events__: {}
+	})
+	return isObj(setters) || isFn(setters) ? result.on(setters) : result
+} : function(source, setters) {
+	if (!isObj(source)) {
+		return {}
+	}
+	var result = extend(head.appendChild(doc.createComment('[object Object]')), observer, source, {
+		__events__: {}
+	})
+	return isObj(setters) || isFn(setters) ? result.on(setters) : result
+}
+
+createObserver.ES5 = false
+//scanView
+var $ = window.jQuery || window.Zepto
+
+if ($ === undefined) {
+	if (isFn(global.define) && (define.amd || define.cmd)) {
+		define({
+			agent: createProxy,
+			observe: createObserver
+		})
+	} else {
+		global.agent = createProxy
+		global.observe = createObserver
+	}
+	return
+}
+
+$.agent = createProxy
+$.observe = createObserver
+
+var $plus = $.plus = {
+	attr: 'js',
+	filterAttr: ['noscan', 'app'],
+	viewModel: []
+}
+
+var push = calling(Array.prototype.push)
+
+function Scaner($startNode) {
+	this.$startNode = $startNode
+	this.viewModel = {}
+}
+
+Scaner.prototype = {
+	filter: function($sources) {
+		var filterNode = []
+		var $startNode = this.$startNode
+
+		each($plus.filterAttr, function(attr) {
+			filterNode.push.apply(filterNode, slice($startNode.find('[' + attr + ']' + ' [' + $plus.attr + ']')))
+		})
+
+		return $sources.filter(function() {
+			return $.inArray(this, filterNode) === -1
+		})
+	},
+
+	parse: function($node) {
+		var viewModel = this.viewModel
+		each(_.parse($node.attr($plus.attr)), function(method, alias) {
+			var vm = viewModel[alias] = viewModel[alias] || {}
+			if (vm.instance) {
+				push(vm.instance, $node[0])
+			} else {
+				method = method.split('-')
+				vm['method'] = method[0]
+				vm['params'] = method[1] ? [method[1]] : []
+				vm['instance'] = $node
+				vm['lastValue'] = null
+			}
+		})
+		return this
+	},
+
+	scan: function() {
+
+		var that = this
+
+		this
+			.parse(this.$startNode)
+			.filter(this.$startNode.find('[' + $plus.attr + ']'))
+			.each(function() {
+				that.parse($(this))
+			})
+
+		return this
+	},
+
+	rescan: function() {
+		this.viewModel = {}
+		return this.scan()
+	},
+
+	get: function() {
+		return this.viewModel
+	}
+}
+
+$.fn.scanView = function(rescan) {
+	var elem = this[0]
+	var vmIndex = elem.vmIndex
+	var isNum = typeof vmIndex === 'number'
+	var vm
+	if (isNum) {
+		vm = $plus.viewModel[vmIndex]
+		return rescan ? vm.rescan().get() : vm.get()
+	}
+	vm = new Scaner(this)
+	$plus.viewModel[elem.vmIndex = $plus.viewModel.length] = vm
+	return vm.scan().get()
+}
+//refresh
+
+//refer to underscore
+// Internal recursive comparison function for `isEqual`.
+var eq = function(a, b, aStack, bStack) {
+	// Identical objects are equal. `0 === -0`, but they aren't identical.
+	// See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
+	if (a === b) return a !== 0 || 1 / a === 1 / b
+		// A strict comparison is necessary because `null == undefined`.
+	if (a == null || b == null) return a === b
+		// Unwrap any wrapped objects.
+		// Compare `[[Class]]` names.
+	var className = toStr(a)
+	if (className !== toStr(b)) return false
+	switch (className) {
+		// Strings, numbers, regular expressions, dates, and booleans are compared by value.
+		case '[object RegExp]':
+			// RegExps are coerced to strings for comparison (Note: '' + /a/i === '/a/i')
+		case '[object String]':
+			// Primitives and their corresponding object wrappers are equivalent; thus, `"5"` is
+			// equivalent to `new String("5")`.
+			return '' + a === '' + b
+		case '[object Number]':
+			// `NaN`s are equivalent, but non-reflexive.
+			// Object(NaN) is equivalent to NaN
+			if (+a !== +a) return +b !== +b
+				// An `egal` comparison is performed for other numeric values.
+			return +a === 0 ? 1 / +a === 1 / b : +a === +b
+		case '[object Date]':
+		case '[object Boolean]':
+			// Coerce dates and booleans to numeric primitive values. Dates are compared by their
+			// millisecond representations. Note that invalid dates with millisecond representations
+			// of `NaN` are not equivalent.
+			return +a === +b
+	}
+
+	var areArrays = className === '[object Array]'
+	if (!areArrays) {
+		if (typeof a != 'object' || typeof b != 'object') return false
+
+		// Objects with different constructors are not equivalent, but `Object`s or `Array`s
+		// from different frames are.
+		var aCtor = a.constructor
+		var bCtor = b.constructor
+		if (aCtor !== bCtor && !(isFn(aCtor) && aCtor instanceof aCtor &&
+				isFn(bCtor) && bCtor instanceof bCtor) && ('constructor' in a && 'constructor' in b)) {
+			return false
+		}
+	}
+	// Assume equality for cyclic structures. The algorithm for detecting cyclic
+	// structures is adapted from ES 5.1 section 15.12.3, abstract operation `JO`.
+	var length = aStack.length
+	while (length--) {
+		// Linear search. Performance is inversely proportional to the number of
+		// unique nested structures.
+		if (aStack[length] === a) return bStack[length] === b
+	}
+
+	// Add the first object to the stack of traversed objects.
+	aStack.push(a)
+	bStack.push(b)
+	var size, result
+		// Recursively compare objects and arrays.
+	if (areArrays) {
+		// Compare array lengths to determine if a deep comparison is necessary.
+		size = a.length
+		result = size === b.length
+		if (result) {
+			// Deep compare the contents, ignoring non-numeric properties.
+			while (size--) {
+				if (!(result = eq(a[size], b[size], aStack, bStack))) break
+			}
+		}
+	} else {
+		// Deep compare objects.
+		var keys = _.keys(a)
+		var key
+		size = keys.length
+			// Ensure that both objects contain the same number of properties before comparing deep equality.
+		result = _.keys(b).length === size
+		if (result) {
+			while (size--) {
+				// Deep compare each member
+				key = keys[size]
+				if (!(result = hasOwn(b, key) && eq(a[key], b[key], aStack, bStack))) break
+			}
+		}
+	}
+	// Remove the first object from the stack of traversed objects.
+	aStack.pop()
+	bStack.pop()
+	return result
 };
 
+// Perform a deep comparison to check if two objects are equal.
+_.isEqual = function(a, b) {
+	return eq(a, b, [], [])
+}
 
-/**@function observe
-*@param {object} 源对象
-*@param {object|function}  初始化侦听 等价于立即调用on方法
-*@returns {object} 被侦听了属性的对象
-*/
-$.observe = function(source, setters) {
-    var model;
-    if (!isObject(source)) return null;
-    model = observer.init(source);
-    return isObject(setters) || isFunction(setters) ? model.on(setters) : model;
-};
+var $fn = $.fn
+
+function Sync(dataModel, viewModel) {
+	this.dataModel = dataModel
+	this.viewModel = viewModel
+}
+
+Sync.prototype = {
+	refresh: function() {
+		var that = this
+		var viewModel = this.viewModel
+		each(this.dataModel, function(data, key) {
+			if (!(key in viewModel)) {
+				return
+			}
+			that.render(viewModel[key], data)
+		})
+	},
+	render: function(vm, data) {
+		if (_.isEqual(data, vm.lastValue)) {
+			return
+		}
+		vm.lastValue = typeof data === 'object' ? isArr(data) ? data.concat() : extend(true, {}, data) : data
+
+		var instance = vm.instance
+		var method = vm.method
+		var params = vm.params
+		var inProto = vm.method in $fn
+
+		if (inProto) {
+
+			if (isSameType(data)) {
+				var template = instance.eq(0).clone()
+				var frag = []
+				method = $fn[method]
+				each(data, function(value, index) {
+					var $item = instance.eq(index)
+					if (!$item.length) {
+						$item = template.clone()
+						frag.push($item.get(0))
+					}
+					method.apply($item, params.concat(value))
+				})
+				if (frag.length) {
+					instance.eq(-1).after(frag)
+					frag.push.apply(instance, frag)
+				}
+			} else {
+				$fn[method].apply(instance, params.concat(data))
+			}
+
+		} else {
+
+			if (!isFn(data)) {
+				return
+			}
+			method = data
+			params = this.dataModel[vm.method]
+			method.apply(instance, [].concat(params || []))
+		}
+	}
+}
+
+
+$.fn.refresh = function(dataModel) {
+	var that = this
+	if (isObj(dataModel)) {
+		new Sync(dataModel, this.scanView()).refresh()
+	} else if (isArr(dataModel)) {
+		each(dataModel, function(dm, index) {
+			new Sync(dm, that.eq(index).scanView()).refresh()
+		})
+	}
+	return this
+}
 //plus.js
 
-
 extend($.fn, {
-	/**
-	 *@param {object|array} api  一个或多个包含jQ方法及其参数的对象
-	 */
+
 	render: function(api) {
-		var self = this,
-			$fn = $.fn;
+		var that = this
+		var $fn = $.fn
 
-		function invoke(key, value) {
-			var $method = $fn[key];
-			$method && $method[isArray(value) ? 'apply' : 'call'](self, value);
+		function invoke(value, key) {
+			var $method = $fn[key]
+			isFn($method) && $method[isArr(value) ? 'apply' : 'call'](that, value)
 		}
 
-		if (isObject(api)) {
+		if (isObj(api)) {
 
-			each(api, invoke);
+			each(api, invoke)
 
-		} else if (isArray(api)) {
+		} else if (isArr(api)) {
 
-			each(api, function() {
-				each(this, invoke);
-			});
+			each(api, function(theApi) {
+				if (isObj(theApi)) {
+					each(theApi, invoke)
+				}
+			})
 
 		}
 
-		return this;
+		return this
 	},
-	/**
-	 *@param {object} 数据模型 与refresh方法的参数相同
-	 *@returns {object} 返回被侦听了属性变化的对象
-	 */
+
 	listen: function(model) {
-		var self = this;
-		self.refresh(model);
-		return $.observe(model).on(function(value, key) {
-			var o = {};
-			o[key] = value;
-			self.refresh(o);
-		});
+		var that = this
+		that.refresh(model)
+		return $.observe(model, function(value, key) {
+			var o = {}
+			o[key] = value
+			that.refresh(o)
+		})
 	}
 });
 
-/**@function define
- *@param {string} 作用域选择器 合法的jquery选择器
- *@param {function} 回调函数 定义一个数据模型
- *@retruns {object} 返回被侦听了属性变化的对象
- */
 $.define = function(name, callback) {
-	var target = $(name),
-		model;
-	if (!target.length) return;
-	model = {};
-	model = callback(model) || model;
-	return target.listen(model);
+	var target = $(name)
+	var model;
+	if (!target.length) return
+	model = {}
+	model = callback(model) || model
+	return target.listen(model)
 };
 
 
 $.render = function(models) {
 	$('[render]').each(function() {
-		var $this = $(this),
-		key = $this.attr('render'),
-		mod;
-		key in models && isObject(mod = models[key]) && $this.render(mod);
-	});
-	return this;
+		var $this = $(this)
+		var key = $this.attr('render')
+		var mod
+		key in models && isObj(mod = models[key]) && $this.render(mod)
+	})
+	return this
 };
 
 var $module = {
 	vmodel: {},
-	/**@function ready
-	 *@param {function} 回调函数 当文档加载完毕vm扫描完毕时即调用
-	 */
+
 	ready: function(callback) {
-		var self = this;
+		var self = this
 		$(document).ready(function() {
-			callback.call(self.$scan());
-		});
-		return this;
+			callback.call(self.$scan())
+		})
+		return this
 	},
 	$scan: function() {
-		var self = this;
+		var self = this
 		$('[app]').each(function() {
-			var $this = $(this),
-				appName = $this.attr('app'),
-				status = false;
-			self.vmodel[appName] = $this.getVM();
+			var $this = $(this)
+			var appName = $this.attr('app')
+			var status = false
+			self.vmodel[appName] = $this.scanView()
 			self.on(appName + '.module', function(model, appName) {
-				if (status || !isObject(model)) return;
-				status = true;
-				this[appName] = $this.listen(model);
-				status = false;
-			});
-		});
-		return this;
+				if (status || !isObj(model)) return
+				status = true
+				this[appName] = $this.listen(model)
+				status = false
+			})
+		})
+		return this
 	}
-};
+}
 
-$.module = extend($.observe({}), $module);
-}(window.jQuery || window.Zepto));
+$.module = $.observe($module)
+
+}(this);

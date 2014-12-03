@@ -1,201 +1,174 @@
 //refresh
-//requrie scan.js
-function isMultipleArgs(arr) {
-	if (!isArray(arr)) return false;
 
-	var len = arr.length,
-		type,
-		i;
-	if (len > 1) {
-		type = $.type(arr[0]);
-		for (i = len - 1; i >= 0; i--) {
-			if ($.type(arr[i]) !== type) return false;
-		}
-		return true;
+//refer to underscore
+// Internal recursive comparison function for `isEqual`.
+var eq = function(a, b, aStack, bStack) {
+	// Identical objects are equal. `0 === -0`, but they aren't identical.
+	// See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
+	if (a === b) return a !== 0 || 1 / a === 1 / b
+		// A strict comparison is necessary because `null == undefined`.
+	if (a == null || b == null) return a === b
+		// Unwrap any wrapped objects.
+		// Compare `[[Class]]` names.
+	var className = toStr(a)
+	if (className !== toStr(b)) return false
+	switch (className) {
+		// Strings, numbers, regular expressions, dates, and booleans are compared by value.
+		case '[object RegExp]':
+			// RegExps are coerced to strings for comparison (Note: '' + /a/i === '/a/i')
+		case '[object String]':
+			// Primitives and their corresponding object wrappers are equivalent; thus, `"5"` is
+			// equivalent to `new String("5")`.
+			return '' + a === '' + b
+		case '[object Number]':
+			// `NaN`s are equivalent, but non-reflexive.
+			// Object(NaN) is equivalent to NaN
+			if (+a !== +a) return +b !== +b
+				// An `egal` comparison is performed for other numeric values.
+			return +a === 0 ? 1 / +a === 1 / b : +a === +b
+		case '[object Date]':
+		case '[object Boolean]':
+			// Coerce dates and booleans to numeric primitive values. Dates are compared by their
+			// millisecond representations. Note that invalid dates with millisecond representations
+			// of `NaN` are not equivalent.
+			return +a === +b
 	}
-	return false;
-}
 
-//refre to http://stackoverflow.com/questions/1068834/object-comparison-in-javascript
-function deepCompare() {
-	var i, l, leftChain, rightChain;
+	var areArrays = className === '[object Array]'
+	if (!areArrays) {
+		if (typeof a != 'object' || typeof b != 'object') return false
 
-	function compare2Objects(x, y) {
-		var p;
-
-		if (isNaN(x) && isNaN(y) && typeof x === 'number' && typeof y === 'number') return true;
-		if (x === y) return true;
-
-		if ((typeof x === 'function' && typeof y === 'function') ||
-			(x instanceof Date && y instanceof Date) ||
-			(x instanceof RegExp && y instanceof RegExp) ||
-			(x instanceof String && y instanceof String) ||
-			(x instanceof Number && y instanceof Number)) {
-			return x.toString() === y.toString();
+		// Objects with different constructors are not equivalent, but `Object`s or `Array`s
+		// from different frames are.
+		var aCtor = a.constructor
+		var bCtor = b.constructor
+		if (aCtor !== bCtor && !(isFn(aCtor) && aCtor instanceof aCtor &&
+				isFn(bCtor) && bCtor instanceof bCtor) && ('constructor' in a && 'constructor' in b)) {
+			return false
 		}
+	}
+	// Assume equality for cyclic structures. The algorithm for detecting cyclic
+	// structures is adapted from ES 5.1 section 15.12.3, abstract operation `JO`.
+	var length = aStack.length
+	while (length--) {
+		// Linear search. Performance is inversely proportional to the number of
+		// unique nested structures.
+		if (aStack[length] === a) return bStack[length] === b
+	}
 
-		if (!(x instanceof Object && y instanceof Object)) return false;
-
-		if (x.isPrototypeOf(y) || y.isPrototypeOf(x)) return false;
-
-
-		if (x.constructor !== y.constructor) return false;
-
-		if (x.prototype !== y.prototype) return false;
-
-		if (inArray(x, leftChain) > -1 || inArray(y, rightChain) > -1) return false;
-
-		for (p in y) {
-			if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
-				return false;
-			} else if (typeof y[p] !== typeof x[p]) {
-				return false;
+	// Add the first object to the stack of traversed objects.
+	aStack.push(a)
+	bStack.push(b)
+	var size, result
+		// Recursively compare objects and arrays.
+	if (areArrays) {
+		// Compare array lengths to determine if a deep comparison is necessary.
+		size = a.length
+		result = size === b.length
+		if (result) {
+			// Deep compare the contents, ignoring non-numeric properties.
+			while (size--) {
+				if (!(result = eq(a[size], b[size], aStack, bStack))) break
 			}
 		}
-
-		for (p in x) {
-			if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
-				return false;
-			} else if (typeof y[p] !== typeof x[p]) {
-				return false;
-			}
-
-			switch (typeof(x[p])) {
-				case 'object':
-				case 'function':
-
-					leftChain.push(x);
-					rightChain.push(y);
-
-					if (!compare2Objects(x[p], y[p])) return false;
-
-					leftChain.pop();
-					rightChain.pop();
-					break;
-
-				default:
-					if (x[p] !== y[p]) return false;
-					break;
+	} else {
+		// Deep compare objects.
+		var keys = _.keys(a)
+		var key
+		size = keys.length
+			// Ensure that both objects contain the same number of properties before comparing deep equality.
+		result = _.keys(b).length === size
+		if (result) {
+			while (size--) {
+				// Deep compare each member
+				key = keys[size]
+				if (!(result = hasOwn(b, key) && eq(a[key], b[key], aStack, bStack))) break
 			}
 		}
-
-		return true;
 	}
-
-	if (arguments.length < 1) return true;
-
-	for (i = 1, l = arguments.length; i < l; i++) {
-
-		leftChain = [];
-		rightChain = [];
-		if (!compare2Objects(arguments[0], arguments[i])) return false;
-	}
-	return true;
-}
-
-$.compare = deepCompare;
-
-function MVVM(source) {
-	isObject(source) && extend(this, source);
-}
-
-MVVM.prototype = {
-	each: each,
-	extend: function(source) {
-		return extend(this, source).refresh();
-	},
-	refresh: function() {
-		var self = this;
-		self.each(self.model, function(prop, value) {
-			if (!(prop in self.vmodel)) return;
-			self.render(prop, value);
-		});
-		return self;
-	},
-	render: function(prop, value) {
-		var model = this.model,
-			oldModel = this.oldModel,
-			vmodel = this.vmodel,
-			target = vmodel[prop],
-			method = target.method,
-			args = target.args,
-			$method = method in $.fn,
-			isArr = isArray(value),
-			multiple = isArr ? isMultipleArgs(value) : false,
-			cloneArr,
-			tpl,
-			ret;
-
-
-		if (deepCompare(target.oldValue, value)) return;
-		target.oldValue = value;
-
-		switch (true) {
-			case $method && isArr && multiple:
-				ret = [];
-				cloneArr = [];
-				tpl = target.eq(0).clone();
-				$method = $.fn[method];
-				each(value, function(i) {
-					var item = target.eq(i);
-					if (!item.length) {
-						item = tpl.clone();
-						cloneArr.push(item[0]);
-					}
-					ret.push($method.apply(item, args.concat(this)));
-				});
-
-				if (cloneArr.length) {
-					target.eq(-1).after(cloneArr);
-					push.apply(target, cloneArr);
-				}
-
-				break;
-
-			case $method:
-				ret = $.fn[method].apply(target, args.concat(value));
-				break;
-
-			default:
-				method = value;
-				args = method.args || arr;
-				args = isArray(args) ? args : [args];
-				multiple = isMultipleArgs(args);
-
-				each(target, function(i) {
-					method.apply($(this), multiple ? args[i] : args);
-				});
-		}
-		if (method === 'listen') {
-			model[prop] = ret;
-		}
-	}
-}
-
-/**@function refresh
- *@param {object|array} 数据模型 一个对象或多个
- */
-$.fn.refresh = function(model) {
-	var self = this;
-	var mvvm = new MVVM();
-	if (isArray(model)) {
-		var len = model.length;
-		this.each(function(i) {
-			if (i >= len) {
-				return false;
-			}
-			mvvm.extend({
-				model: model[i],
-				vmodel: self.eq(i).getVM()
-			});
-		})
-	} else if (isObject(model)) {
-		this.each(function() {
-			mvvm.extend({
-				model: model,
-				vmodel: self.getVM()
-			});
-		});
-	}
-	return this;
+	// Remove the first object from the stack of traversed objects.
+	aStack.pop()
+	bStack.pop()
+	return result
 };
+
+// Perform a deep comparison to check if two objects are equal.
+_.isEqual = function(a, b) {
+	return eq(a, b, [], [])
+}
+
+var $fn = $.fn
+
+function Sync(dataModel, viewModel) {
+	this.dataModel = dataModel
+	this.viewModel = viewModel
+}
+
+Sync.prototype = {
+	refresh: function() {
+		var that = this
+		var viewModel = this.viewModel
+		each(this.dataModel, function(data, key) {
+			if (!(key in viewModel)) {
+				return
+			}
+			that.render(viewModel[key], data)
+		})
+	},
+	render: function(vm, data) {
+		if (_.isEqual(data, vm.lastValue)) {
+			return
+		}
+		vm.lastValue = typeof data === 'object' ? isArr(data) ? data.concat() : extend(true, {}, data) : data
+
+		var instance = vm.instance
+		var method = vm.method
+		var params = vm.params
+		var inProto = vm.method in $fn
+
+		if (inProto) {
+
+			if (isSameType(data)) {
+				var template = instance.eq(0).clone()
+				var frag = []
+				method = $fn[method]
+				each(data, function(value, index) {
+					var $item = instance.eq(index)
+					if (!$item.length) {
+						$item = template.clone()
+						frag.push($item.get(0))
+					}
+					method.apply($item, params.concat(value))
+				})
+				if (frag.length) {
+					instance.eq(-1).after(frag)
+					frag.push.apply(instance, frag)
+				}
+			} else {
+				$fn[method].apply(instance, params.concat(data))
+			}
+
+		} else {
+
+			if (!isFn(data)) {
+				return
+			}
+			method = data
+			params = this.dataModel[vm.method]
+			method.apply(instance, [].concat(params || []))
+		}
+	}
+}
+
+
+$.fn.refresh = function(dataModel) {
+	var that = this
+	if (isObj(dataModel)) {
+		new Sync(dataModel, this.scanView()).refresh()
+	} else if (isArr(dataModel)) {
+		each(dataModel, function(dm, index) {
+			new Sync(dm, that.eq(index).scanView()).refresh()
+		})
+	}
+	return this
+}

@@ -7,7 +7,7 @@ module.exports = function(grunt) {
 		},
 		concat: {
 			files1: {
-				src: ['src/wrap-start.js', 'src/arr.js', 'src/staticMethod.js', 'src/inherit.js', 'src/parseAttr.js', 'src/scan.js', 'src/refresh.js', 'src/observe.js', 'src/plus.js', 'src/wrap-end.js'],
+				src: ['src/intro.js', 'src/agent.js', 'src/observe.js', 'src/scanView.js', 'src/refresh.js', 'src/api.js', 'src/outro.js'],
 				dest: 'dist/jplus-debug.js'
 			}
 		},
