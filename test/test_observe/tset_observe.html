@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>test</title>
+        <meta name="description" content="">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="cleartype" content="on">
+        <style type="text/css">
+        /* css reset*/
+        html,body,div,span,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,abbr,address,cite,code,del,dfn,em,img,ins,kbd,q,samp,small,strong,sub,sup,var,b,i,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}:focus{outline:1}article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary{display:block}nav ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:"";content:none}a{margin:0;padding:0;border:0;font-size:100%;vertical-align:baseline;background:transparent}ins{background-color:#ff9;color:#000;text-decoration:none}mark{background-color:#ff9;color:#000;font-style:italic;font-weight:700}del{text-decoration:line-through}abbr[title],dfn[title]{border-bottom:1px dotted #000;cursor:help}table{border-collapse:collapse;border-spacing:0}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}input,select{vertical-align:middle}
+
+           .clearfloat:before,.clearfloat:after {content:"";display:table;}
+            .clearfloat:after { clear:both; }
+            /* For IE 6/7 (trigger hasLayout) */
+            .clearfloat { *zoom:1; }
+            /* center class */
+            .c-wrap { display: table; *writing-mode: tb-rl; }
+            .c-inner { display: table-cell; vertical-align: middle; *width:100%; *margin:auto 0; *writing-mode:lr-tb;}
+
+            /* main */
+            body { background:#fafafa;}
+            .container { width: 1000px; margin:40px auto 0 auto; background: #fff;}
+            .item { float: left; width: 50%; height: 300px; color:#fff;}
+            #btn { width: 120px; height: 30px; margin:40px auto 0 auto; background:#f77028; cursor:pointer; line-height: 30px; font-size: 16px; color:#fff; text-align: center; font-family:"Microsoft YaHei"; user-select:none; -webkit-user-select:none;}
+        </style>
+
+    </head>
+    <body>
+
+        <div class="container clearfloat">
+            <div class="item" title="asdf"></div>
+            <div class="item"></div>
+        </div>
+        <div id="btn" js="text:word; after: sibling; css: style">按钮</div>
+
+
+<script type="text/javascript" src="../../dist/jplus-debug.js"></script>
+<script type="text/javascript">
+(function() {
+
+	var obj1 = {
+		name: 'Jade',
+		age: 24
+	}
+
+	var count = 0
+
+	obj1 = observe(obj1, {
+		name: function(value, key, oldValue) {
+			console.log(value, key, oldValue)
+		},
+		age: function() {
+			console.log(arguments)
+		}
+	})
+
+	obj1.on('name.test', function(value, key, oldValue) {
+		console.log(arguments, this)
+	})
+
+	obj1.on(function() {
+		console.log('all0', arguments)
+	})
+
+	obj1.on(function() {
+		console.log('all1', arguments)
+	})
+	obj1.off()
+	//异步观察，短时间内改变多次，只取最后一次作出反应
+	for (var i = 0; i < 10000; i += 1) {
+		obj1.name = 'jade' + i
+	}
+	obj1.age += 1
+	setTimeout(function() {
+		function testOff() {
+			console.log('testoff')
+			//解除所有
+			console.log(obj1.__events__)
+		}
+		obj1.on('name', testOff)
+		obj1.name += 'setTimeout'
+		obj1.age += 10
+	}, 10)
+
+	//只绑定一次
+	obj1.once('name', function() {
+		console.log('once')
+	})
+
+	//挂起1次，name触发1次后，才开始真正被触发
+	obj1.hold('name.test_hold', 2, function() {
+		console.log('test_hold')
+	})
+
+	console.log(obj1)
+
+
+	//test equal value
+	var obj2 = {
+		item: {
+			a: 'a',
+			b: 'b'
+		}
+	}
+
+	obj2 = observe(obj2, {
+		item: function() {
+			console.log(arguments, 'equal')
+		}
+	})
+
+	obj2.item = {
+		a: 'a',
+		b: 'b'
+	}
+
+	setTimeout(function() {
+		obj2.item = {
+			a: 'a',
+			b: '1'
+		}
+	}, 100)
+
+
+}())
+</script>
+</body>
+</html>

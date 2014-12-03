@@ -10,6 +10,9 @@ if ($ === undefined) {
 	} else {
 		global.agent = createProxy
 		global.observe = createObserver
+		if (global.$$ === undefined) {
+			global.$$ = createProxy
+		}
 	}
 	return
 }
