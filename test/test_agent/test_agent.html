@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>test</title>
+        <meta name="description" content="">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="cleartype" content="on">
+        <style type="text/css">
+        /* css reset*/
+        html,body,div,span,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,abbr,address,cite,code,del,dfn,em,img,ins,kbd,q,samp,small,strong,sub,sup,var,b,i,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}:focus{outline:1}article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary{display:block}nav ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:"";content:none}a{margin:0;padding:0;border:0;font-size:100%;vertical-align:baseline;background:transparent}ins{background-color:#ff9;color:#000;text-decoration:none}mark{background-color:#ff9;color:#000;font-style:italic;font-weight:700}del{text-decoration:line-through}abbr[title],dfn[title]{border-bottom:1px dotted #000;cursor:help}table{border-collapse:collapse;border-spacing:0}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}input,select{vertical-align:middle}
+
+           .clearfloat:before,.clearfloat:after {content:"";display:table;}
+            .clearfloat:after { clear:both; }
+            /* For IE 6/7 (trigger hasLayout) */
+            .clearfloat { *zoom:1; }
+            /* center class */
+            .c-wrap { display: table; *writing-mode: tb-rl; }
+            .c-inner { display: table-cell; vertical-align: middle; *width:100%; *margin:auto 0; *writing-mode:lr-tb;}
+
+            /* main */
+            body { background:#fafafa;}
+            .container { width: 1000px; margin:40px auto 0 auto; background: #fff;}
+            .item { float: left; width: 50%; height: 300px; color:#fff;}
+            #btn { width: 120px; height: 30px; margin:40px auto 0 auto; background:#f77028; cursor:pointer; line-height: 30px; font-size: 16px; color:#fff; text-align: center; font-family:"Microsoft YaHei"; user-select:none; -webkit-user-select:none;}
+        </style>
+
+    </head>
+    <body>
+
+        <div class="container clearfloat">
+            <div class="item" title="asdf"></div>
+            <div class="item"></div>
+        </div>
+        <div id="btn" js="text:word; after: sibling; css: style">按钮</div>
+
+
+<script type="text/javascript" src="../../dist/jplus-debug.js"></script>
+<script type="text/javascript" src="../vendor/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="../vendor/sea.js"></script>
+<script type="text/javascript">
+(function() {
+
+
+        //test jQuery
+        //$$ 或 agent 返回代理函数
+        //第一个参数为构造函数或单例对象
+        //第二或之后的参数，为构造函数的参数
+        //如要代理 $('.item')，形式如下
+
+        var $item = $$($, '.item')
+
+        //下面这种形式也可以，上面为快捷方式
+/*        var $item = $('.item')
+        $item = $$($item)*/
+
+
+        var items_settings = {
+
+            prepend: '测试代理jQuery实例，调用text、css以及animate方法',
+            //数组形式，长度大于1， 为同一数据类型，即视为多次调用
+            append: ['<div>多次调用</div>', '<div>多次调用</div>', '<div>多次调用</div>', '<div>多次调用</div>'],
+
+            css: {
+                'color': '#f00'
+            },
+
+            animate: {
+                'line-height': '30px'
+            }
+
+        }
+
+        $item(items_settings)
+
+        $item([
+            {append: '多个options形式<br>'},
+            {append: '多个options形式<br>'},
+            {append: '多个options形式<br>'},
+            {append: '多个options形式<br>'},
+            {append: '多个options形式<br>'},
+            ])
+
+
+        //test seajs
+
+        //seajs 是单例，可以直接用代理函数覆盖它
+
+        seajs = $$(seajs)
+
+        var seajs_settings = {
+            //相当于调用 seajs.config()
+            config: {
+                alias: {
+                    'test': './test-seajs'
+                }
+            },
+            //相当于调用 seajs.use
+            use: ['test', function(data) {
+
+                setTimeout(function() {
+                    $item({
+                        append: data
+                    })
+                }, 1000)
+
+            }]
+        }
+
+        seajs(seajs_settings)
+
+        //可以通过以下方式返回 agent 所代理的实例对象
+/*        console.log(seajs)
+        seajs = seajs()
+        console.log(seajs)*/
+
+        //test 自定义构造函数
+
+        function Person(name, age) {
+            this.name = name
+            this.age = age
+        }
+
+        Person.prototype = {
+            say: function(words) {
+
+                console.log(words || this.name)
+            },
+            sing: function(song) {
+                console.log('singing ' + song)
+            },
+            grow: function(age) {
+                this.age = age || this.age
+                console.log('My age now is ' + this.age)
+            }
+        }
+
+        var person = $$(Person, 'Jade', '24')
+
+        person({
+
+            say: '我不会被say，因为下面有个say覆盖了我',
+
+            sing: ['月亮代表我的心', '歌曲1', '歌曲2', '歌曲3', '歌曲4', '歌曲5'],
+
+            grow: 25,
+
+            //添加新属性
+            job: 'FE',
+
+            //添加新方法
+            jump: function(high) {
+                console.log('跳了' + high + '米')
+            },
+
+            //如果现有的或原型上的属性为函数，不会覆盖
+            //只会调用，并将新的值作为参数传入
+            say: function() {
+                'say函数已经存在，我将被作为参数传入，在控制台被输出'
+            }
+        })
+
+        //不管传参与否，代理函数每次都返回其所带里的实例
+        //随时可以通过赋值，找回实例，并按照以前的风格使用
+        console.log(person())
+
+
+        //test dom对象
+
+        var btn = $$(document.getElementById('btn'))
+
+        btn({
+
+            onclick: function() {
+                console.log('测试原生DOM对象')
+            },
+
+            style: {
+                background: '#f00',
+                width: '200px'
+            },
+
+            title: '一个普通title'
+
+        })
+
+        btn.alias.parse('style:stl; alt: name;')
+
+        btn({
+            stl: {
+                color:'#000'
+            },
+            name: 'test'
+        })
+
+
+        //test alias 别名
+        var $btn = $$(jQuery, '#btn')
+
+        $btn.alias.parse($btn().attr('js'))
+
+        $btn({
+            word: 'test alias',
+            sibling: '<p>btn的兄弟元素</p>',
+            style: {
+                color:'green',
+                background: '#eaeaea'
+            }
+        })
+
+        console.dir($btn)
+
+
+    }())
+</script>
+</body>
+</html>
