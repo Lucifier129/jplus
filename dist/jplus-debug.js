@@ -323,7 +323,7 @@ function randomStr(prefix) {
 }
 
 var nextTick = function(fn) {
-	return setTimeout(fn, 0)
+	return setTimeout(fn, 4)
 }
 
 //refer to underscore
@@ -546,8 +546,6 @@ function checkPropName(propName) {
 
 
 var observer = {
-	filter: '__events__ _add _remove on off offAll each extend once hold filter'.split(' '),
-
 	_add: function(prop, callback, name) {
 		checkPropName(prop)
 		observeProperty(this, prop)
@@ -586,10 +584,53 @@ var observer = {
 				}
 			} else if (isArr(arg)) {
 				each(arg, function(prop) {
-					that.on(prop, arg[1])
+					that.on(prop, args[1])
 				})
 			}
 		}
+		return this
+	},
+
+	_bang: function(prop, data, name) {
+		var that = this
+		var currentValue = that[prop]
+		each(this.__events__[prop][name] || [], function(callback) {
+			callback.call(that, data, prop, currentValue)
+		})
+	},
+
+	trigger: function(props, data) {
+		var that = this
+		var index, name, arg
+
+		if (!props) {
+			return this
+		}
+
+		if (isStr(props)) {
+			index = props.indexOf('.')
+			if (index > 0) {
+				this._bang(props.substr(0, index), data, props.substr(index + 1))
+			} else if (!index) {
+				props = props.substr(1)
+				each(this.__events__, function(eventsList, prop) {
+					each(eventsList, function(callbacks, name) {
+						if (name === props) {
+							that._bang(prop, data, name)
+						}
+					})
+				})
+			} else {
+				each(this.__events__[props] || [], function(callbacks, name) {
+					that._bang(props, data, name)
+				})
+			}
+		} else if (isArr(props)) {
+			each(props, function(prop) {
+				that.trigger(prop, data)
+			})
+		}
+
 		return this
 	},
 
@@ -692,27 +733,43 @@ var observer = {
 		return this.on(prop, wrapper)
 	},
 
-	hold: function(prop, times, callback) {
-
-		if (!(times === +times && times >= 0)) {
-			throwErr(times + '不是一个正整数')
+	tie: function(props, callback) {
+		if (!isFn(callback)) {
+			return this
 		}
 
-		var that = this
-
-		function wrapper() {
-			times--
-			if (times <= 0) {
-				callback.apply(that, arguments)
+		if (isArr(props)) {
+			var that = this
+			var total = props.length
+			var cache = []
+			var data = []
+			var wrapper = function(value, key) {
+				if (cache.indexOf(key) < 0) {
+					cache.push(key)
+					if (cache.length === total) {
+						each(props, function(prop, index) {
+							prop = prop.split('.')[0]
+							data[index] = that[prop]
+						})
+						callback.apply(that, data)
+					}
+				} else if (cache.length >= total) {
+					cache.length = 0
+					cache.push(key)
+				}
 			}
+			return this.on(props, wrapper)
+		} else if (isStr(props)) {
+			return this.on(props, callback)
 		}
-
-		this.on(prop, wrapper)
-
 		return this
-
 	}
 }
+
+observer.bind = observer.on
+observer.unbind = observer.off
+observer.fire = observer.trigger
+observer.filter = _.keys(observer).concat(['__events__', 'filter'])
 
 var createObserver = ES5 ? function(source, setters) {
 	if (!isObj(source)) {
@@ -733,6 +790,7 @@ var createObserver = ES5 ? function(source, setters) {
 }
 
 createObserver.ES5 = false
+createObserver.fn = observer
 //scanView
 var $ = window.jQuery || window.Zepto
 

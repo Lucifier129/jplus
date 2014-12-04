@@ -22,107 +22,464 @@
 
             /* main */
             body { background:#fafafa;}
-            .container { width: 1000px; margin:40px auto 0 auto; background: #fff;}
-            .item { float: left; width: 50%; height: 300px; color:#fff;}
+            .container { width: 1000px; margin:0 auto; padding:10px; background: #fff; border:1px solid #eaeaea; text-align: center;}
+            .item { display:inline-block; *display:inline; *zoom:1; width: 47.5%; height: 300px; margin:5px; padding-left: 10px; overflow:auto; color:#333; border:1px solid #ccc;  text-align: left;}
+            .item h2 { line-height: 40px; height: 40px;}
+            .container p { line-height: 24px; color:#333; font-size: 12px; word-wrap: break-word; }
             #btn { width: 120px; height: 30px; margin:40px auto 0 auto; background:#f77028; cursor:pointer; line-height: 30px; font-size: 16px; color:#fff; text-align: center; font-family:"Microsoft YaHei"; user-select:none; -webkit-user-select:none;}
         </style>
 
     </head>
     <body>
 
-        <div class="container clearfloat">
-            <div class="item" title="asdf"></div>
-            <div class="item"></div>
+        <div class="container clearfloat" id="container"></div>
+        <!-- <div id="btn">按钮</div> -->
+
+        <script type="text/template" id="temp">
+        <div class="item">
+          <h2></h2>
+          <h3></h3>
         </div>
-        <div id="btn" js="text:word; after: sibling; css: style">按钮</div>
+        </script>
 
 
 <script type="text/javascript" src="../../dist/jplus-debug.js"></script>
 <script type="text/javascript">
 (function() {
-
-	var obj1 = {
-		name: 'Jade',
-		age: 24
+	//兼容性输出
+	function log(id, content) {
+		var item = document.getElementById(id)
+		if (!item) {
+			var frag = document.createElement('div')
+			frag.innerHTML = document.getElementById('temp').innerHTML
+			item = frag.firstChild
+			while (item.nodeName.indexOf('text') >= 0) {
+				item = item.nextSibling
+			}
+			item.id = id
+			item.getElementsByTagName('h2')[0].innerHTML = id + ':' + hash[id]
+			document.getElementById('container').appendChild(item)
+		}
+		var p = document.createElement('p')
+		p.innerHTML = [].slice.call(arguments, 1).join('，')
+		item.appendChild(p)
 	}
 
-	var count = 0
+	var hash = {
+		test_init: '测试一步到位的初始化并侦听',
+		test_on: '测试拆分初始化与侦听',
+		test_one_by_one: '测试逐个侦听',
+		test_change_a_lot: '测试短时间内频繁修改',
+		test_once: '测试触发一次后自动解绑',
+		test_many_to_one: '测试给多个属性绑定同一事件函数',
+		test_all: '测试为当前拥有的所有属性绑定同一事件函数',
+		test_tie: '测试捆绑式侦听属性',
+		test_each: '测试each遍历属性',
+		test_extend: '测试extend方法批量修改属性',
+		test_trigger: '测试自主同步触发',
+		test_off_one: '测试解除一个属性的所有事件绑定',
+		test_off_one_ns: '解除一个属性下某个命名空间的所有事件绑定',
+		test_off_fn: '测试解除具体事件函数，不管它在何个属性下',
+		test_off_fn_one: '测试解除具体属性下的具体事件函数',
+		test_off_all: '测试取消全部事件'
+	}
 
-	obj1 = observe(obj1, {
+	//测试一步到位的初始化并侦听
+	var test_init = observe({
+		name: 'test_init',
+		count: 0
+	}, {
 		name: function(value, key, oldValue) {
-			console.log(value, key, oldValue)
+			this.count++
+			log('test_init', value, 'oldValue = ' + oldValue)
 		},
-		age: function() {
-			console.log(arguments)
+		count: function(value, key, oldValue) {
+			log('test_init', 'test_init.count = ' + value)
+		},
+		'name.ns': function(value) {
+			log('test_init', value + ' trigger by ns')
 		}
 	})
 
-	obj1.on('name.test', function(value, key, oldValue) {
-		console.log(arguments, this)
+	test_init.name += ' 改变'
+
+
+	//测试拆分初始化与侦听
+	var test_on = observe({
+		name: 'test_on',
+		count: 0
 	})
 
-	obj1.on(function() {
-		console.log('all0', arguments)
+	test_on.on({
+		name: function(value, key, oldValue) {
+			this.count++
+			test_init.name = ' 被test_on的事件触发函数所改变'
+			log('test_on', value, 'oldValue = ' + oldValue)
+		},
+		count: function() {
+			log('test_on', 'test_on.count = ' + this.count)
+		}
 	})
 
-	obj1.on(function() {
-		console.log('all1', arguments)
+	test_on.name += ' 改变'
+
+	//测试逐个侦听
+
+	var test_one_by_one = observe({
+		name: 'test_one_by_one',
+		count: 0
 	})
-	obj1.off()
-	//异步观察，短时间内改变多次，只取最后一次作出反应
+
+	test_one_by_one.on('name', function() {
+		this.count++
+		log('test_one_by_one', this.name + ' 普通触发')
+	})
+
+	test_one_by_one.on('count', function() {
+		log('test_one_by_one', 'test_one_by_one.count = ' + this.count)
+	})
+
+	test_one_by_one.on('count.ns', function() {
+		log('test_one_by_one', 'test_one_by_one.count = ' + this.count + ' by 命名空间 count.ns')
+	})
+
+	test_one_by_one.name = 'one by one'
+
+	//测试短时间内频繁修改
+	var test_change_a_lot = observe({
+		name: 'test_change_a_lot',
+		count: 0
+	})
+
+	test_change_a_lot.on({
+		name: function(value, key, oldValue) {
+			this.count += 1
+			log('test_change_a_lot', 'trigger test_change_a_lot.name = ' + this.name)
+		},
+		count: function(value) {
+			log('test_change_a_lot', 'test_change_a_lot.count = ' + value)
+		}
+	})
+
 	for (var i = 0; i < 10000; i += 1) {
-		obj1.name = 'jade' + i
+		test_change_a_lot.name = '属性变化为异步观察者，同步的频繁修改不会反复触发，这条消息显示时，修改了' + i + '次'
 	}
-	obj1.age += 1
+
+	//测试触发一次后自动解绑
+	var test_once = observe({
+		name: 'test_once',
+		count: 0
+	})
+
+	test_once.once('name', function(value, key, oldValue) {
+		this.count++
+		log('test_once', 'test_once.name = ' + value)
+	})
+
+	test_once.on('count', function() {
+		log('test_once', 'test_once.count = ' + this.count)
+	})
+
+	test_once.name = '这条消息显示后，once事件自动解绑，其余消息不显示'
+
 	setTimeout(function() {
-		function testOff() {
-			console.log('testoff')
-			//解除所有
-			console.log(obj1.__events__)
-		}
-		obj1.on('name', testOff)
-		obj1.name += 'setTimeout'
-		obj1.age += 10
+		test_once.name = '因为是异步观察者，所以同步连续触发只认最后一次，异步二次触发，因为是once，所以显示这条消息就意味着出错'
+	}, 100)
+
+	//测试给多个属性绑定同一事件函数
+	var test_many_to_one = observe({
+		name: 'test_many_to_one',
+		count: 0
+	})
+
+	//顺便测试侦听未存在的属性
+	test_many_to_one.on(['one', 'two', 'three', 'four', 'five'], function(value, key, oldValue) {
+		this.count++
+		log('test_many_to_one', value, key, oldValue + '')
+	})
+
+	test_many_to_one.on('count', function() {
+		log('test_many_to_one', 'test_many_to_one = ' +  this.count)
+	})
+
+	test_many_to_one.one = '[几个属性同步触发]'
+	test_many_to_one.two = '[事件内部都有count++]'
+	test_many_to_one.three = '[使得count属性变化速率太快]'
+	test_many_to_one.four = '[异步观察者只取最后一次的值]'
+	test_many_to_one.five = '[所以只出现一次test_many_to_one=5]'
+
+	//测试为当前拥有的所有属性绑定同一事件函数
+	var test_all = observe({
+		name: 'test_all',
+		a: 1,
+		b: 2,
+		c: 3,
+		d: 4,
+		e: 5,
+		f: 6
+	})
+
+	//支持链式调用
+	test_all.on(function(value, key) {
+		log('test_all', 'test_all.' + key + ' = ' + value)
+	}).each(function(value, key) {
+		this[key] = value + ' change by test_all'
+	})
+
+	//测试捆绑式侦听属性
+	var test_tie = observe({
+		name: 'test_tie',
+		count: 0
+	})
+
+	test_tie.tie(['first', 'second', 'third', 'fourth'], function(first, second, third, fourth) {
+		this.count++
+		log('test_tie', first, second, third, fourth)
+	})
+
+	test_tie.on('first', function(value) {
+		log('test_tie', '我是用on侦听的，所以不受捆绑限制，test_tie.first乱入 ')
+	})
+
+	test_tie.on('count', function() {
+		log('test_tie', 'test_tie.count = ' + this.count)
+	})
+
+	test_tie.first = '[first：一组属性捆绑侦听]'
+	test_tie.second = '<br>[second：只有当它们都起码被触发过一次时，捆绑事件才触发]'
+	test_tie.third = '<br>[third：触发后又要求全部起码被触发过一次]'
+	test_tie.fourth = '<br>[fourth:一组一组的触发]'
+
+	setTimeout(function() {
+		test_tie.first = 'first值-改变'
+		test_tie.second = 'second值-改变'
+		test_tie.third = 'third值-改变'
+		test_tie.fourth = 'fourth值-改变'
 	}, 10)
 
-	//只绑定一次
-	obj1.once('name', function() {
-		console.log('once')
+	//测试each方法遍历属性
+	var test_each = observe({
+		name: 'test_each',
+		first: 'first',
+		second: 'second',
+		third: 'third',
+		fourth: 'fourth',
+		five: 'five',
+		six: 'six',
+		seven: 'seven',
+		eight: 'eight',
+		nine: 'nine',
+		ten: 'ten'
 	})
 
-	//挂起1次，name触发1次后，才开始真正被触发
-	obj1.hold('name.test_hold', 2, function() {
-		console.log('test_hold')
+	test_each.each(function(value, key) {
+		this.on(key, function() {
+			log('test_each', key + ' <b>from</b> ' +  value + ' <b>change to</b> ' + this[key])
+		})
+		this[key] = Math.random().toString(36).substr(2)
 	})
 
-	console.log(obj1)
+	//测试extend方法批量修改属性
+	var test_extend = observe({
+		name: 'test_extend',
+		first: 'first',
+		second: 'second',
+		third: 'third',
+		fourth: 'fourth',
+		five: 'five',
+		six: 'six',
+		seven: 'seven',
+		eight: 'eight',
+		nine: 'nine',
+		ten: 'ten'
+		/*,other: '除非解除这段注释'*/
+	}, function(value, key) {
+		log('test_extend',  'test_extend.' + key + ' = ' + value)
+	})
 
+	test_extend.extend({
+		first: 'first_extend',
+		second: 'second_extend',
+		third: 'third_extend',
+		fourth: 'fourth_extend',
+		five: 'five_extend',
+		six: 'six_extend',
+		seven: 'seven_extend',
+		eight: 'eight_extend',
+		nine: 'nine_extend',
+		ten: 'ten_extend',
+		other: '这是新增属性，还没有被侦听，所以不会被输出'
+	})
 
-	//test equal value
-	var obj2 = {
-		item: {
-			a: 'a',
-			b: 'b'
+	//测试自主同步触发
+	var test_trigger = observe({
+		name: 'test_trigger',
+		count: 0,
+		first: 1
+	})
+
+	test_trigger.on('count', function(data, key, currentValue) {
+		log('test_trigger', data)
+	})
+
+	test_trigger.on('count', function(value, key, oldValue) {
+		log('test_trigger', '穿插在count中，证明指定属性触发有效')
+	})
+
+	test_trigger.on('name', function(data) {
+		log('test_trigger',  data)
+	})
+
+	test_trigger.trigger('name', '指定触发name事件，测试框之所以排第一位，是因为它是同步观察者，不赋值给name属性， 不过滤相同值。属性变化是异步观察者')
+
+	test_trigger.on(['name.for_trigger', 'first.for_trigger'], function(data, key) {
+		log('test_trigger', '根据命名空间触发事件' + key + ' 传入数据为：' + data)
+	})
+
+	test_trigger.trigger('.for_trigger', '指定命名空间为：for_trigger')
+	test_trigger.trigger('name.for_trigger', '指定属性指定命名空间式触发,目标为name.for_trigger')
+
+	for (i = 0; i < 100; i += 1) {
+		test_trigger.trigger('count', i)
+		if (!i) {
+			test_trigger.trigger('count', '同步修改可以反复触发，可以用相同值触发,此时值为' + i)
 		}
 	}
 
-	obj2 = observe(obj2, {
-		item: function() {
-			console.log(arguments, 'equal')
+	//测试解除一个属性的所有事件绑定
+	var test_off_one =observe({
+		name: 'test_off_one',
+		count: 0
+	}, {
+		name: function(value) {
+			this.count++
+			log('test_off_one', value)
+		},
+		count: function(value) {
+			log('test_off_one', value)
 		}
 	})
 
-	obj2.item = {
-		a: 'a',
-		b: 'b'
+	test_off_one.on('count', function() {
+		log('test_off_one', '反正会被取消，写什么都不会被打印啦')
+	})
+
+	//注释掉下面这句，count就被打印
+	test_off_one.off('count')
+	test_off_one.name = 'count事件已经被取消，所以不会打印'
+
+	//测试解除一个属性下某个命名空间的所有事件绑定
+	var test_off_one_ns = observe({
+		name: 'test_off_one_ns',
+		count: 0
+	})
+
+	test_off_one_ns.on('name', function(value) {
+		this.count++
+		log('test_off_one_ns', value + '本消息无命名空间')
+	})
+
+	test_off_one_ns.on('name.ns1', function(value) {
+		log('test_off_one_ns', value + '本消息命名空间为name.ns1')
+	})
+
+	test_off_one_ns.on('name.ns2', function(value) {
+		log('test_off_one_ns', value + '本消息命名空间为name.ns2')
+	})
+
+	test_off_one_ns.on('name.ns3', function(value) {
+		log('test_off_one_ns', value + '本消息命名空间为name.ns3')
+	})
+
+	test_off_one_ns.on('name.ns4', function(value) {
+		log('test_off_one_ns', value + '本消息命名空间为name.ns4，1次绑定')
+	})
+
+	test_off_one_ns.on('name.ns4', function(value) {
+		log('test_off_one_ns', value + '本消息命名空间为name.ns4，2次绑定')
+	})
+
+	test_off_one_ns.on('name.ns4', function(value) {
+		log('test_off_one_ns', value + '本消息命名空间为name.ns4，3次绑定')
+	})
+
+	test_off_one_ns.on('name.ns4', function(value) {
+		log('test_off_one_ns', value + '本消息命名空间为name.ns4，4次绑定')
+	})
+
+	test_off_one_ns.on('name', function(value) {
+		log('test_off_one_ns', value + '本消息也无命名空间')
+	})
+
+	test_off_one_ns.on('count', function() {
+		log('test_off_one_ns', '打印count，以示有无被意外取消，如能显示，则无')
+	})
+
+
+
+	test_off_one_ns.off('name.ns4')
+	test_off_one_ns.name = '取消事件name.ns4，'
+
+	//测试解除具体事件函数，不管它在何个属性下
+	var test_off_fn = observe({
+		name: 'test_off_fn',
+		count: 0
+	})
+
+	function fn_for_test_off_fn(value, key) {
+		log('test_off_fn', value + key + '我是绑定所有当前属性，将被针对性取消')
 	}
 
-	setTimeout(function() {
-		obj2.item = {
-			a: 'a',
-			b: '1'
+	test_off_fn.on(fn_for_test_off_fn)
+
+	test_off_fn.on('name', function(value) {
+		log('test_off_fn',  '我是name属性匿名事件，我没被取消' + value + '，此时count值为' + this.count)
+	})
+
+	test_off_fn.name = '看谁输出我'
+
+	test_off_fn.off(fn_for_test_off_fn).count = 123123
+
+	//测试解除具体属性下的具体事件函数
+	var test_off_fn_one = observe({
+		name: 'test_off_fn_one',
+		count: 0
+	})
+
+	function fn_for_test_off_fn_one(value, key) {
+		log('test_off_fn_one', key + '属性事件，值为:' + value)
+	}
+
+	test_off_fn_one.on(fn_for_test_off_fn_one)
+
+	test_off_fn_one.off('name', fn_for_test_off_fn_one)
+
+	test_off_fn_one.name = '我被取消了具体事件'
+	test_off_fn_one.count = '我跟name拥有同一具体事件函数，但没被取消'
+
+	//测试取消全部事件
+	var test_off_all = observe({
+		name: 'test_off_all',
+		count: 0
+	})
+
+	test_off_all.on({
+		name: function(value) {
+			log('test_off_all', value)
+		},
+		count: function(value) {
+			log('test_off_all', value)
 		}
-	}, 100)
+	})
+
+	test_off_all.on('other', function(value) {
+		log('test_off_all', 'other' + value)
+	})
+
+	test_off_all.trigger('name', '自主触发name事件，然后链式调用off，解除全部，再触发name事件，以及改变name属性，如无意外，都解除后都无事件反应')
+	.off().trigger('name', '事件被取消完了，这条消息不显示').name = '属性变化当然也不会产生反应'
+
+
 
 
 }())
