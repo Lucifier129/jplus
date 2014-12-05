@@ -2,11 +2,9 @@
 
 var $fn = $.fn
 
-function Sync(dataModel, viewModel, template, node) {
+function Sync(dataModel, viewModel) {
 	this.dataModel = dataModel
 	this.viewModel = viewModel
-	this.template = template
-	this.node = node
 }
 
 Sync.prototype = {
@@ -33,32 +31,28 @@ Sync.prototype = {
 		if (vm.method in $fn) {
 
 			if (isSameType(data)) {
-				var template = $(this.template) || instance[0].cloneNode(true)
+				var template = instance[0].cloneNode(true)
 				var frag = doc.createDocumentFragment()
 				var curTotal = instance.length
 				var $item
-				var temp
-				if (method === 'refresh') {
-					temp = this.template
-				}
 				method = $fn[method]
 				for (var index = 0, len = data.length; index < len; index++) {
 					if (index < curTotal) {
 						$item = $(instance[index])
 					} else {
-						$item = template.nodeName ? $(template.cloneNode(true)) : template
+						$item = $(template.cloneNode(true))
 						push(instance, frag.appendChild($item[0]))
 					}
-					method.apply($item, params.concat(data[index], temp || []))
+					method.apply($item, params.concat(data[index]))
 				}
 
 				if (frag.childNodes.length) {
 					var last = instance[curTotal - 1]
 					var next
 					if (next = last.nextSibling) {
-						(last.parentNode || this.node).insertBefore(frag, next)
+						last.parentNode.insertBefore(frag, next)
 					} else {
-						(last.parentNode || this.node).appendChild(frag)
+						last.parentNode.appendChild(frag)
 					}
 				}
 				template = frag = null
@@ -79,13 +73,13 @@ Sync.prototype = {
 }
 
 
-$.fn.refresh = function(dataModel, template) {
+$.fn.refresh = function(dataModel) {
 	var that = this
 	if (isObj(dataModel)) {
-		new Sync(dataModel, this.scanView(), template, this[0]).refresh()
+		new Sync(dataModel, this.scanView()).refresh()
 	} else if (isArr(dataModel)) {
 		each(dataModel, function(dm, index) {
-			new Sync(dm, that.eq(index).scanView(), template, this[0]).refresh()
+			new Sync(dm, that.eq(index).scanView()).refresh()
 		})
 	}
 	return this
