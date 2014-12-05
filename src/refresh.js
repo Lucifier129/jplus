@@ -9,14 +9,14 @@ function Sync(dataModel, viewModel) {
 
 Sync.prototype = {
 	refresh: function() {
+		var that = this
 		var viewModel = this.viewModel
-		var dataModel = this.dataModel
-		for (var key in dataModel) {
+		each(this.dataModel, function(data, key) {
 			if (!(key in viewModel)) {
-				continue
+				return
 			}
-			this.render(viewModel[key], dataModel[key])
-		}
+			that.render(viewModel[key], data)
+		})
 	},
 	render: function(vm, data) {
 		if (_.isEqual(data, vm.lastValue)) {
@@ -27,35 +27,26 @@ Sync.prototype = {
 		var instance = vm.instance
 		var method = vm.method
 		var params = vm.params
+		var inProto = vm.method in $fn
 
-		if (vm.method in $fn) {
+		if (inProto) {
 
 			if (isSameType(data)) {
-				var template = instance[0].cloneNode(true)
-				var frag = doc.createDocumentFragment()
-				var curTotal = instance.length
-				var $item
+				var template = instance.eq(0).clone()
+				var frag = []
 				method = $fn[method]
-				for (var index = 0, len = data.length; index < len; index++) {
-					if (index < curTotal) {
-						$item = $(instance[index])
-					} else {
-						$item = $(template.cloneNode(true))
-						push(instance, frag.appendChild($item[0]))
+				each(data, function(value, index) {
+					var $item = instance.eq(index)
+					if (!$item.length) {
+						$item = template.clone()
+						frag.push($item.get(0))
 					}
-					method.apply($item, params.concat(data[index]))
+					method.apply($item, params.concat(value))
+				})
+				if (frag.length) {
+					instance.eq(-1).after(frag)
+					frag.push.apply(instance, frag)
 				}
-
-				if (frag.childNodes.length) {
-					var last = instance[curTotal - 1]
-					var next
-					if (next = last.nextSibling) {
-						last.parentNode.insertBefore(frag, next)
-					} else {
-						last.parentNode.appendChild(frag)
-					}
-				}
-				template = frag = null
 			} else {
 				$fn[method].apply(instance, params.concat(data))
 			}

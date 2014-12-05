@@ -539,7 +539,7 @@ function checkPropName(propName) {
 		throw new Error(
 			'If you want to support IE6/7/8. The property name [' + propName + '] can not be observed, ' +
 			'because DOM has the same property name. ' +
-			'You can use the [observe.ES5 = true] to ignore IE6/7/8.'
+			'You can use the [jQuery.ES5 = true] to ignore IE6/7/8.'
 		)
 	}
 }
@@ -827,24 +827,16 @@ function Scaner($startNode) {
 }
 
 Scaner.prototype = {
-	//Zepto 与 jQuery 的 find 方法，在此表现不一致，故通过构造选择器来完成
 	filter: function($sources) {
 		var filterNode = []
-		var startNode = this.$startNode[0]
-		var id = startNode.id = startNode.id || 'filter_id_for_scaner'
+		var $startNode = this.$startNode
+
 		each($plus.filterAttr, function(attr) {
-			var items = $([id, '[' + attr + ']', '[' + $plus.attr + ']'].join(' '))
-			filterNode.push.apply(filterNode, slice(items))
+			filterNode.push.apply(filterNode, slice($startNode.find('[' + attr + ']' + ' [' + $plus.attr + ']')))
 		})
-		if (id === 'filter_id_for_scaner') {
-			if (startNode.removeAttribute) {
-				startNode.removeAttribute('id')
-			} else {
-				startNode.id = ''
-			}
-		}
+
 		return $sources.filter(function() {
-			return filterNode.indexOf(this) === -1
+			return $.inArray(this, filterNode) === -1
 		})
 	},
 
@@ -869,12 +861,11 @@ Scaner.prototype = {
 
 		var that = this
 
-		this.parse(this.$startNode)
+		this
+			.parse(this.$startNode)
 			.filter(this.$startNode.find('[' + $plus.attr + ']'))
 			.each(function() {
-				var $this = $(this)
-				$this.prevObject = $this.context = null
-				that.parse($this)
+				that.parse($(this))
 			})
 
 		return this
@@ -914,14 +905,14 @@ function Sync(dataModel, viewModel) {
 
 Sync.prototype = {
 	refresh: function() {
+		var that = this
 		var viewModel = this.viewModel
-		var dataModel = this.dataModel
-		for (var key in dataModel) {
+		each(this.dataModel, function(data, key) {
 			if (!(key in viewModel)) {
-				continue
+				return
 			}
-			this.render(viewModel[key], dataModel[key])
-		}
+			that.render(viewModel[key], data)
+		})
 	},
 	render: function(vm, data) {
 		if (_.isEqual(data, vm.lastValue)) {
@@ -932,35 +923,26 @@ Sync.prototype = {
 		var instance = vm.instance
 		var method = vm.method
 		var params = vm.params
+		var inProto = vm.method in $fn
 
-		if (vm.method in $fn) {
+		if (inProto) {
 
 			if (isSameType(data)) {
-				var template = instance[0].cloneNode(true)
-				var frag = doc.createDocumentFragment()
-				var curTotal = instance.length
-				var $item
+				var template = instance.eq(0).clone()
+				var frag = []
 				method = $fn[method]
-				for (var index = 0, len = data.length; index < len; index++) {
-					if (index < curTotal) {
-						$item = $(instance[index])
-					} else {
-						$item = $(template.cloneNode(true))
-						push(instance, frag.appendChild($item[0]))
+				each(data, function(value, index) {
+					var $item = instance.eq(index)
+					if (!$item.length) {
+						$item = template.clone()
+						frag.push($item.get(0))
 					}
-					method.apply($item, params.concat(data[index]))
+					method.apply($item, params.concat(value))
+				})
+				if (frag.length) {
+					instance.eq(-1).after(frag)
+					frag.push.apply(instance, frag)
 				}
-
-				if (frag.childNodes.length) {
-					var last = instance[curTotal - 1]
-					var next
-					if (next = last.nextSibling) {
-						last.parentNode.insertBefore(frag, next)
-					} else {
-						last.parentNode.appendChild(frag)
-					}
-				}
-				template = frag = null
 			} else {
 				$fn[method].apply(instance, params.concat(data))
 			}

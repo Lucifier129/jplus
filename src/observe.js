@@ -225,7 +225,7 @@ function checkPropName(propName) {
 		throw new Error(
 			'If you want to support IE6/7/8. The property name [' + propName + '] can not be observed, ' +
 			'because DOM has the same property name. ' +
-			'You can use the [observe.ES5 = true] to ignore IE6/7/8.'
+			'You can use the [jQuery.ES5 = true] to ignore IE6/7/8.'
 		)
 	}
 }

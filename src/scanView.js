@@ -34,24 +34,16 @@ function Scaner($startNode) {
 }
 
 Scaner.prototype = {
-	//Zepto 与 jQuery 的 find 方法，在此表现不一致，故通过构造选择器来完成
 	filter: function($sources) {
 		var filterNode = []
-		var startNode = this.$startNode[0]
-		var id = startNode.id = startNode.id || 'filter_id_for_scaner'
+		var $startNode = this.$startNode
+
 		each($plus.filterAttr, function(attr) {
-			var items = $([id, '[' + attr + ']', '[' + $plus.attr + ']'].join(' '))
-			filterNode.push.apply(filterNode, slice(items))
+			filterNode.push.apply(filterNode, slice($startNode.find('[' + attr + ']' + ' [' + $plus.attr + ']')))
 		})
-		if (id === 'filter_id_for_scaner') {
-			if (startNode.removeAttribute) {
-				startNode.removeAttribute('id')
-			} else {
-				startNode.id = ''
-			}
-		}
+
 		return $sources.filter(function() {
-			return filterNode.indexOf(this) === -1
+			return $.inArray(this, filterNode) === -1
 		})
 	},
 
@@ -76,12 +68,11 @@ Scaner.prototype = {
 
 		var that = this
 
-		this.parse(this.$startNode)
+		this
+			.parse(this.$startNode)
 			.filter(this.$startNode.find('[' + $plus.attr + ']'))
 			.each(function() {
-				var $this = $(this)
-				$this.prevObject = $this.context = null
-				that.parse($this)
+				that.parse($(this))
 			})
 
 		return this
