@@ -26,6 +26,7 @@
 <!-- <script type="text/javascript" src="http://lucifier129.github.io/jplus/vendor/jplus-debug.js"></script> -->
 <script type="text/javascript">
 (function() {
+    $.plus.debug = true
     var start = new Date()
 
         var numList = []
@@ -39,6 +40,7 @@
                 num: num
             }
         }
+
        $('table').refresh({numList: numList})
 
     $('span').text(+new Date() - start)
