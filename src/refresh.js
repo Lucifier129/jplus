@@ -2,9 +2,10 @@
 
 var $fn = $.fn
 
-function Sync(dataModel, viewModel) {
+function Sync(dataModel, viewModel, startNode) {
 	this.dataModel = dataModel
 	this.viewModel = viewModel
+	this.startNode = startNode
 }
 
 Sync.prototype = {
@@ -15,10 +16,10 @@ Sync.prototype = {
 			if (!(key in viewModel)) {
 				continue
 			}
-			this.render(viewModel[key], dataModel[key])
+			this.render(viewModel[key], dataModel[key], key)
 		}
 	},
-	render: function(vm, data) {
+	render: function(vm, data, key) {
 		if (_.isEqual(data, vm.lastValue)) {
 			return
 		}
@@ -29,35 +30,73 @@ Sync.prototype = {
 		var params = vm.params
 
 		if (vm.method in $fn) {
-
+			method = $fn[method]
 			if (isSameType(data)) {
-				var template = instance[0].cloneNode(true)
-				var frag = doc.createDocumentFragment()
-				var curTotal = instance.length
-				var $item
-				method = $fn[method]
-				for (var index = 0, len = data.length; index < len; index++) {
-					if (index < curTotal) {
-						$item = $(instance[index])
+				var elemLen = instance.length
+				var dataLen = data.length
+				var $item, i
+				if (vm.alive) {
+					if (dataLen <= elemLen) {
+						instance.slice(dataLen).remove()
+						for (i = 0; i < dataLen; i += 1) {
+							$item = $(instance[i])
+							method.apply($item, params.concat(data[i]))
+						}
 					} else {
-						$item = $(template.cloneNode(true))
-						push(instance, frag.appendChild($item[0]))
+						var temp = vm.template
+						var frag = doc.createDocumentFragment()
+						for (i = 0; i < dataLen; i += 1) {
+							if (i < elemLen && vm.defaultTemplate) {
+								$item = $(instance[i])
+							} else {
+								$item = temp.clone().each(function() {
+									frag.appendChild(this)
+								})
+								push(instance, $item)
+							}
+							method.apply($item, params.concat(data[i]))
+						}
+						if (frag.childNodes.length) {
+							switch (vm.insert) {
+								case 'after':
+									var last = instance[elemLen - 1]
+									var next
+									if (next = last.nextSibling) {
+										last.parentNode.insertBefore(frag, next)
+									} else {
+										last.parentNode.appendChild(frag)
+									}
+									break
+								case 'before':
+									var first = instance[0]
+									first.parentNode.insertBefore(frag, first)
+									break
+								case 'append':
+									vm.base.appendChild(frag)
+									break
+								case 'prepend':
+									var firstChild = vm.base.firstChild
+									if (firstChild) {
+										vm.base.insertBefore(frag, firstChild)
+									} else {
+										vm.base.appendChild(frag)
+									}
+									break
+							}
+
+						}
+						temp = frag = null
 					}
-					method.apply($item, params.concat(data[index]))
+				} else {
+					var len = Math.min(elemLen, dataLen)
+					for (i = 0; i < len; i += 1) {
+						$item = $(instance[i])
+						method.apply($item, params.concat(data[i]))
+					}
 				}
 
-				if (frag.childNodes.length) {
-					var last = instance[curTotal - 1]
-					var next
-					if (next = last.nextSibling) {
-						last.parentNode.insertBefore(frag, next)
-					} else {
-						last.parentNode.appendChild(frag)
-					}
-				}
-				template = frag = null
 			} else {
-				$fn[method].apply(instance, params.concat(data))
+				method.apply(instance, params.concat(data))
 			}
 
 		} else {
@@ -73,13 +112,14 @@ Sync.prototype = {
 }
 
 
-$.fn.refresh = function(dataModel) {
+$.fn.refresh = function(dataModel, options) {
 	var that = this
+	var elem = this[0]
 	if (isObj(dataModel)) {
-		new Sync(dataModel, this.scanView()).refresh()
+		new Sync(dataModel, this.scanView(), elem).refresh()
 	} else if (isArr(dataModel)) {
 		each(dataModel, function(dm, index) {
-			new Sync(dm, that.eq(index).scanView()).refresh()
+			new Sync(dm, that.eq(index).scanView(), elem).refresh()
 		})
 	}
 	return this
