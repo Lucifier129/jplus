@@ -46,42 +46,22 @@ Sync.prototype = {
 						var temp = vm.template
 						var frag = doc.createDocumentFragment()
 						for (i = 0; i < dataLen; i += 1) {
-							if (i < elemLen && vm.defaultTemplate) {
+							if (i < elemLen) {
 								$item = $(instance[i])
 							} else {
 								$item = temp.clone().each(function() {
-									frag.appendChild(this)
+									push(instance, frag.appendChild(this))
 								})
-								push(instance, $item)
 							}
 							method.apply($item, params.concat(data[i]))
 						}
 						if (frag.childNodes.length) {
-							switch (vm.insert) {
-								case 'after':
-									var last = instance[elemLen - 1]
-									var next
-									if (next = last.nextSibling) {
-										last.parentNode.insertBefore(frag, next)
-									} else {
-										last.parentNode.appendChild(frag)
-									}
-									break
-								case 'before':
-									var first = instance[0]
-									first.parentNode.insertBefore(frag, first)
-									break
-								case 'append':
-									vm.base.appendChild(frag)
-									break
-								case 'prepend':
-									var firstChild = vm.base.firstChild
-									if (firstChild) {
-										vm.base.insertBefore(frag, firstChild)
-									} else {
-										vm.base.appendChild(frag)
-									}
-									break
+							var last = instance[elemLen - 1]
+							var next
+							if (next = last.nextSibling) {
+								last.parentNode.insertBefore(frag, next)
+							} else {
+								last.parentNode.appendChild(frag)
 							}
 
 						}

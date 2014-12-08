@@ -16,8 +16,8 @@
     <body>
         <div id="container">
             <ul>
-                <li js="refresh:tree" temp="#temp">
-                    <h1 js="text:name"></h1>
+                <li js="refresh:tree" temp="#temp" id="start">
+                    <h3 js="text:name"></h1>
                     <ul js="refresh:children" temp="#temp"  insert="append" noscan></ul>
                 </li>
             </ul>
@@ -64,12 +64,25 @@
     }
 
 
-    $('#container').refresh(data).refresh(data)
+    var temp = $('#temp').html()
 
-    setTimeout(function() {
+    function renderTree(content, data) {
+        content.children('h3').html(data.name)
+        if (data.children && data.children.length) {
+            content.children('ul').append(new Array(data.children.length + 1).join(temp)).children('li').each(function(i) {
+                renderTree($(this), data.children[i])
+            })
+        }
+    }
+
+    renderTree($('#start'), data)
+
+/*    $('#container').refresh(data)*/
+
+/*    setTimeout(function() {
         data.children[0].name = 'asdfasdfsdf'
         $('#container').refresh(data)
-    }, 1000)
+    }, 1000)*/
 
 
 

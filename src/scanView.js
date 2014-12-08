@@ -66,30 +66,10 @@ Scaner.prototype = {
 				method = method.split('-')
 				vm['method'] = method[0]
 				vm['params'] = method.slice(1)
+				vm['instance'] = $node
 				vm['lastValue'] = null
 				vm['alive'] = $node.attr('unalive') !== undefined ? false : true
-				var insertMethod = $node.attr('insert')
-				vm['insert'] = insertMethod !== undefined ? insertMethod : 'after'
-				var template = $($node.attr('temp'))
-				if (template.length === 1) {
-					var nodeName = template[0].nodeName
-					if (/script|textarea|noscript/i.test(nodeName)) {
-						template = $(template.html())
-					} else if (/input|select/i.test(nodeName)) {
-						template = $(template.val())
-					}
-				}
-				if (template.length) {
-					vm['template'] = template
-					vm['defaultTemplate'] = false
-					vm['instance'] = inherit($fn)
-					vm['instance'].length = 0
-					vm['base'] = $node[0]
-				} else {
-					vm['template'] = $node.clone()
-					vm['defaultTemplate'] = true
-					vm['instance'] = $node
-				}
+				vm['template'] = $node.clone()
 			}
 		})
 		return this
