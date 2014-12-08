@@ -14,81 +14,18 @@
 
     </head>
     <body>
-        <div id="container">
-            <ul>
-                <li js="refresh:tree" temp="#temp" id="start">
-                    <h3 js="text:name"></h1>
-                    <ul js="refresh:children" temp="#temp"  insert="append" noscan></ul>
-                </li>
-            </ul>
-        </div>
-        <script type="text/temp" id="temp">
-            <li>
-                <h3 js="text:name"></h3>
-                <ul js="refresh:children"  temp="#temp" insert="append" noscan></ul>
-            </li>
-        </script>
+        <p js="text: num"></p>
+        <p js="num"></p>
+        <p js="num"></p>
+        <p js="num"></p>
 <script type="text/javascript" src="../vendor/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="../../dist/jplus-debug.js"></script>
 <script type="text/javascript">
 (function() {
     $.plus.debug = true
-    var data = {
-        name: 'My Tree',
-        children: [{
-            name: 'hello'
-        }, {
-            name: 'wat'
-        }, {
-            name: 'child folder',
-            children: [{
-                name: 'child folder',
-                children: [{
-                    name: 'hello'
-                }, {
-                    name: 'wat'
-                }]
-            }, {
-                name: 'hello'
-            }, {
-                name: 'wat'
-            }, {
-                name: 'child folder',
-                children: [{
-                    name: 'hello'
-                }, {
-                    name: 'wat'
-                }]
-            }]
-        }]
-    }
-
-
-    var temp = $('#temp').html()
-
-    function renderTree(content, data) {
-        content.children('h3').html(data.name)
-        if (data.children && data.children.length) {
-            content.children('ul').append(new Array(data.children.length + 1).join(temp)).children('li').each(function(i) {
-                renderTree($(this), data.children[i])
-            })
-        }
-    }
-
-    renderTree($('#start'), data)
-
-/*    $('#container').refresh(data)*/
-
-/*    setTimeout(function() {
-        data.children[0].name = 'asdfasdfsdf'
-        $('#container').refresh(data)
-    }, 1000)*/
-
-
-
-
-
-
+    $('body').refresh({
+        num: [1,2,3,4,5,7,8,0]
+    })
 
 }())
 </script>

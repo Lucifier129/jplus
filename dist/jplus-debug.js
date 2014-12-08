@@ -89,7 +89,7 @@ var _ = {
 		each(group, function(value) {
 			value = value.trim().split(':')
 			if (value.length < 2) {
-				return
+				return ret[value[0]] = ''
 			}
 			ret[value[1].trim()] = value[0].trim()
 		})
