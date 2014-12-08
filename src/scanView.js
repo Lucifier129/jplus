@@ -23,6 +23,7 @@ $.observe = createObserver
 var $plus = $.plus = {
 	attr: 'js',
 	filterAttr: ['noscan', 'app'],
+	debug: false,
 	viewModel: []
 }
 
@@ -64,9 +65,11 @@ Scaner.prototype = {
 			} else {
 				method = method.split('-')
 				vm['method'] = method[0]
-				vm['params'] = method[1] ? [method[1]] : []
+				vm['params'] = method.slice(1)
 				vm['instance'] = $node
 				vm['lastValue'] = null
+				vm['alive'] = $node.attr('unalive') !== undefined ? false : true
+				vm['template'] = $node.clone()
 			}
 		})
 		return this
@@ -98,15 +101,11 @@ Scaner.prototype = {
 }
 
 $.fn.scanView = function(rescan) {
-	var elem = this[0]
-	var vmIndex = elem.vmIndex
-	var isNum = typeof vmIndex === 'number'
-	var vm
-	if (isNum) {
-		vm = $plus.viewModel[vmIndex]
-		return rescan ? vm.rescan().get() : vm.get()
+	var vm = new Scaner(this)
+	if ($.plus.debug) {
+		var elem = this[0]
+		$plus.viewModel[elem.vmIndex = typeof elem.vmIndex === 'number' ? elem.vmIndex : $plus.viewModel.length] = vm
 	}
-	vm = new Scaner(this)
-	$plus.viewModel[elem.vmIndex = $plus.viewModel.length] = vm
+
 	return vm.scan().get()
 }

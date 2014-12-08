@@ -89,7 +89,7 @@ var _ = {
 		each(group, function(value) {
 			value = value.trim().split(':')
 			if (value.length < 2) {
-				return
+				return ret[value[0]] = ''
 			}
 			ret[value[1].trim()] = value[0].trim()
 		})
@@ -816,6 +816,7 @@ $.observe = createObserver
 var $plus = $.plus = {
 	attr: 'js',
 	filterAttr: ['noscan', 'app'],
+	debug: false,
 	viewModel: []
 }
 
@@ -857,9 +858,11 @@ Scaner.prototype = {
 			} else {
 				method = method.split('-')
 				vm['method'] = method[0]
-				vm['params'] = method[1] ? [method[1]] : []
+				vm['params'] = method.slice(1)
 				vm['instance'] = $node
 				vm['lastValue'] = null
+				vm['alive'] = $node.attr('unalive') !== undefined ? false : true
+				vm['template'] = $node.clone()
 			}
 		})
 		return this
@@ -891,25 +894,22 @@ Scaner.prototype = {
 }
 
 $.fn.scanView = function(rescan) {
-	var elem = this[0]
-	var vmIndex = elem.vmIndex
-	var isNum = typeof vmIndex === 'number'
-	var vm
-	if (isNum) {
-		vm = $plus.viewModel[vmIndex]
-		return rescan ? vm.rescan().get() : vm.get()
+	var vm = new Scaner(this)
+	if ($.plus.debug) {
+		var elem = this[0]
+		$plus.viewModel[elem.vmIndex = typeof elem.vmIndex === 'number' ? elem.vmIndex : $plus.viewModel.length] = vm
 	}
-	vm = new Scaner(this)
-	$plus.viewModel[elem.vmIndex = $plus.viewModel.length] = vm
+
 	return vm.scan().get()
 }
 //refresh
 
 var $fn = $.fn
 
-function Sync(dataModel, viewModel) {
+function Sync(dataModel, viewModel, startNode) {
 	this.dataModel = dataModel
 	this.viewModel = viewModel
+	this.startNode = startNode
 }
 
 Sync.prototype = {
@@ -920,10 +920,10 @@ Sync.prototype = {
 			if (!(key in viewModel)) {
 				continue
 			}
-			this.render(viewModel[key], dataModel[key])
+			this.render(viewModel[key], dataModel[key], key)
 		}
 	},
-	render: function(vm, data) {
+	render: function(vm, data, key) {
 		if (_.isEqual(data, vm.lastValue)) {
 			return
 		}
@@ -934,35 +934,53 @@ Sync.prototype = {
 		var params = vm.params
 
 		if (vm.method in $fn) {
-
+			method = $fn[method]
 			if (isSameType(data)) {
-				var template = instance[0].cloneNode(true)
-				var frag = doc.createDocumentFragment()
-				var curTotal = instance.length
-				var $item
-				method = $fn[method]
-				for (var index = 0, len = data.length; index < len; index++) {
-					if (index < curTotal) {
-						$item = $(instance[index])
+				var elemLen = instance.length
+				var dataLen = data.length
+				var $item, i
+				if (vm.alive) {
+					if (dataLen <= elemLen) {
+						instance.slice(dataLen).remove()
+						for (i = 0; i < dataLen; i += 1) {
+							$item = $(instance[i])
+							method.apply($item, params.concat(data[i]))
+						}
 					} else {
-						$item = $(template.cloneNode(true))
-						push(instance, frag.appendChild($item[0]))
+						var temp = vm.template
+						var frag = doc.createDocumentFragment()
+						for (i = 0; i < dataLen; i += 1) {
+							if (i < elemLen) {
+								$item = $(instance[i])
+							} else {
+								$item = temp.clone().each(function() {
+									push(instance, frag.appendChild(this))
+								})
+							}
+							method.apply($item, params.concat(data[i]))
+						}
+						if (frag.childNodes.length) {
+							var last = instance[elemLen - 1]
+							var next
+							if (next = last.nextSibling) {
+								last.parentNode.insertBefore(frag, next)
+							} else {
+								last.parentNode.appendChild(frag)
+							}
+
+						}
+						temp = frag = null
 					}
-					method.apply($item, params.concat(data[index]))
+				} else {
+					var len = Math.min(elemLen, dataLen)
+					for (i = 0; i < len; i += 1) {
+						$item = $(instance[i])
+						method.apply($item, params.concat(data[i]))
+					}
 				}
 
-				if (frag.childNodes.length) {
-					var last = instance[curTotal - 1]
-					var next
-					if (next = last.nextSibling) {
-						last.parentNode.insertBefore(frag, next)
-					} else {
-						last.parentNode.appendChild(frag)
-					}
-				}
-				template = frag = null
 			} else {
-				$fn[method].apply(instance, params.concat(data))
+				method.apply(instance, params.concat(data))
 			}
 
 		} else {
@@ -978,13 +996,14 @@ Sync.prototype = {
 }
 
 
-$.fn.refresh = function(dataModel) {
+$.fn.refresh = function(dataModel, options) {
 	var that = this
+	var elem = this[0]
 	if (isObj(dataModel)) {
-		new Sync(dataModel, this.scanView()).refresh()
+		new Sync(dataModel, this.scanView(), elem).refresh()
 	} else if (isArr(dataModel)) {
 		each(dataModel, function(dm, index) {
-			new Sync(dm, that.eq(index).scanView()).refresh()
+			new Sync(dm, that.eq(index).scanView(), elem).refresh()
 		})
 	}
 	return this
