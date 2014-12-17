@@ -14,17 +14,44 @@
 
     </head>
     <body>
-        <p js="text: num"></p>
-        <p js="num"></p>
-        <p js="num"></p>
-        <p js="num"></p>
+        <p js="render: obj"></p>
 <script type="text/javascript" src="../vendor/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="../../dist/jplus-debug.js"></script>
 <script type="text/javascript">
 (function() {
     $.plus.debug = true
     $('body').refresh({
-        num: [1,2,3,4,5,7,8,0]
+        obj: [{
+            text: 0,
+            attr: ['title', 9]
+        },{
+            text: 1,
+            attr: ['title', 8]
+        },{
+            text: 2,
+            attr: ['title', 7]
+        },{
+            text: 3,
+            attr: ['title', 6]
+        },{
+            text: 4,
+            attr: ['title', 5]
+        },{
+            text: 5,
+            attr: ['title', 4]
+        },{
+            text: 6,
+            attr: ['title', 3]
+        },{
+            text: 7,
+            attr: ['title', 2]
+        },{
+            text: 8,
+            attr: ['title', 1]
+        },{
+            text: 9,
+            attr: ['title', 0]
+        }]
     })
 
 }())
