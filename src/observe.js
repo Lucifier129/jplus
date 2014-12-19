@@ -501,3 +501,9 @@ var createObserver = ES5 ? function(source, setters) {
 
 createObserver.ES5 = false
 createObserver.fn = observer
+
+$.observe = createObserver
+
+if ($ === global) {
+	return
+}

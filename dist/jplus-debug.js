@@ -3,9 +3,32 @@
  *Author: Jade
  *Date: 2014.11.20
  */
-! function(global, undefined) {
-
-//agent
+;(function(factory) {
+	if (typeof define === 'function') {
+		var paths = {}
+		if (define.amd) {
+			paths = requirejs.s.contexts._.config.paths
+		} else if (define.cmd) {
+			paths = seajs.data.alias
+		}
+		if ('jquery' in paths) {
+			define(function(require) {
+				var $ = require('jquery')
+				factory($, window)
+				return $
+			})
+		} else if ('zepto' in paths) {
+			define(function(require) {
+				var $ = require('zepto')
+				factory($, window)
+				return $
+			})
+		}
+	} else {
+		factory(window.jQuery || window.Zepto || window, window)
+	}
+})(function($, global) {
+//base
 function calling(fn) {
 	return function() {
 		return Function.prototype.call.apply(fn, arguments)
@@ -98,14 +121,14 @@ var _ = {
 	}
 }
 
-function each(obj, fn, context, useForIn) {
+function each(obj, fn, context) {
 	if (obj == undefined || !isFn(fn)) {
 		return obj
 	}
 	var len = obj.length
 	var ret
 
-	if (len === +len && len > 0 && !useForIn) {
+	if (len === +len && len > 0) {
 		for (var i = 0; i < len; i += 1) {
 			ret = fn.call(context || global, obj[i], i, obj)
 			if (ret !== undefined) {
@@ -190,130 +213,6 @@ var inherit = Object.create || function(proto) {
 	F.prototype = proto
 	return new F()
 }
-
-function invoke(fn, args, context) {
-	return fn[isArr(args) ? 'apply' : 'call'](context || global, args);
-}
-
-function New(constructor) {
-	var instance
-
-	if (!isFn(constructor)) {
-
-		instance = typeof constructor === 'object' ? constructor : {}
-
-	} else {
-
-		instance = inherit(constructor.prototype)
-		instance = constructor.apply(instance, slice(arguments, 1)) || instance
-
-	}
-
-	return instance
-}
-
-
-function mix(source) {
-	var instance = mix.instance
-	var alias = mix.alias
-	var ret = {}
-	var oldValue
-
-	each(source, function(value, prop) {
-
-		var oldValue = instance[prop]
-		var retValue
-
-		if (oldValue === undefined) {
-			if (prop in alias) {
-				oldValue = instance[prop = alias[prop]]
-			}
-		}
-
-		if (isFn(oldValue)) {
-
-			if (isSameType(value)) {
-				ret[prop] = []
-				each(value, function(v) {
-					retValue = invoke(oldValue, v, instance)
-					if (retValue !== undefined) {
-						ret[prop].push(retValue)
-					}
-				})
-			} else {
-				retValue = invoke(oldValue, value, instance)
-				if (retValue !== undefined) {
-					ret[prop] = retValue
-				}
-			}
-
-		} else if (typeof oldValue === 'object' && typeof value === 'object') {
-			extend(oldValue, value)
-		} else {
-			instance[prop] = value
-		}
-
-	}, global, true)
-
-	return ret
-}
-
-
-
-function createProxy() {
-	var instance = New.apply(global, arguments)
-	var alias = inherit(createProxy.alias)
-
-	return extend(function(source) {
-		if (source === undefined) {
-			return instance
-		}
-		var ret
-		mix.instance = instance
-		mix.alias = alias
-
-		if (isArr(source)) {
-			ret = []
-			each(source, function(src) {
-				if (typeof src === 'object') {
-					ret.push(mix(src))
-				}
-			})
-		} else if (typeof source === 'object') {
-			ret = mix(source)
-		}
-
-		return ret
-	}, {
-		alias: alias
-	})
-}
-
-createProxy.alias = inherit({
-	extend: function(source) {
-		return extend(this, source)
-	},
-
-	each: function(fn) {
-		return each(this, fn)
-	},
-
-	keys: function() {
-		return _.keys(this)
-	},
-
-	values: function() {
-		return _.values(this)
-	},
-
-	invert: function() {
-		return _.invert(this)
-	},
-
-	parse: function(descri) {
-		return this.extend(_.parse(descri))
-	}
-})
 //observe.js
 
 function randomStr(prefix) {
@@ -817,28 +716,13 @@ var createObserver = ES5 ? function(source, setters) {
 
 createObserver.ES5 = false
 createObserver.fn = observer
-//scanView
-var $ = window.jQuery || window.Zepto
 
-if ($ === undefined) {
-	if (isFn(global.define) && (define.amd || define.cmd)) {
-		define({
-			agent: createProxy,
-			observe: createObserver
-		})
-	} else {
-		global.agent = createProxy
-		global.observe = createObserver
-		if (global.$$ === undefined) {
-			global.$$ = createProxy
-		}
-	}
-	return
-}
-
-$.agent = createProxy
 $.observe = createObserver
 
+if ($ === global) {
+	return
+}
+//scanView
 var $plus = $.plus = {
 	attr: 'js',
 	filterAttr: ['noscan', 'app'],
@@ -918,7 +802,6 @@ Scaner.prototype = {
 		return this.viewModel
 	}
 }
-
 $.fn.scanView = function(rescan) {
 	var vm = new Scaner(this)
 	if ($.plus.debug) {
@@ -1125,4 +1008,4 @@ var $module = {
 
 $.module = $.observe($module)
 
-}(this);
+});

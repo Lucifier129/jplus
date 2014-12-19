@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>test</title>
+        <meta name="description" content="">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="cleartype" content="on">
+        <style type="text/css">
+        /* css reset*/
+        html,body,div,span,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,abbr,address,cite,code,del,dfn,em,img,ins,kbd,q,samp,small,strong,sub,sup,var,b,i,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}:focus{outline:1}article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary{display:block}nav ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:"";content:none}a{margin:0;padding:0;border:0;font-size:100%;vertical-align:baseline;background:transparent}ins{background-color:#ff9;color:#000;text-decoration:none}mark{background-color:#ff9;color:#000;font-style:italic;font-weight:700}del{text-decoration:line-through}abbr[title],dfn[title]{border-bottom:1px dotted #000;cursor:help}table{border-collapse:collapse;border-spacing:0}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}input,select{vertical-align:middle}
+
+           .clearfloat:before,.clearfloat:after {content:"";display:table;}
+            .clearfloat:after { clear:both; }
+            /* For IE 6/7 (trigger hasLayout) */
+            .clearfloat { *zoom:1; }
+            /* center class */
+            .c-wrap { display: table; *writing-mode: tb-rl; }
+            .c-inner { display: table-cell; vertical-align: middle; *width:100%; *margin:auto 0; *writing-mode:lr-tb;}
+
+            /* main */
+            body { background:#fafafa;}
+            .container { width: 1000px; margin:0 auto; padding:10px; background: #fff; border:1px solid #eaeaea; text-align: center;}
+            .item { display:inline-block; *display:inline; *zoom:1; width: 47.5%; height: 300px; margin:5px; padding-left: 10px; overflow:auto; color:#333; border:1px solid #ccc;  text-align: left;}
+            .item h2 { line-height: 40px; height: 40px;}
+            .container p { line-height: 24px; color:#333; font-size: 12px; word-wrap: break-word; }
+            #btn { width: 120px; height: 30px; margin:40px auto 0 auto; background:#f77028; cursor:pointer; line-height: 30px; font-size: 16px; color:#fff; text-align: center; font-family:"Microsoft YaHei"; user-select:none; -webkit-user-select:none;}
+        </style>
+
+    </head>
+    <body>
+
+        <div class="container clearfloat" id="container"></div>
+        <!-- <div id="btn">按钮</div> -->
+
+        <script type="text/template" id="temp">
+        <div class="item">
+          <h2 js="text: title1"></h2>
+          <h3 js="text: descri"></h3>
+        </div>
+        </script>
+
+
+<script type="text/javascript" src="../vendor/require.js"></script>
+<script type="text/javascript">
+require.config({
+	paths: {
+		'jquery': 'http://webresource.fws.qa.nt.ctripcorp.com/ResVacationOnline/R8/js/vacation/lib/jquery',
+		'jplus': '../../dist/jplus-debug'
+	}
+})
+
+require(['jplus'], function($) {
+	$('#container').html($('#temp').html()).refresh({
+		title1: 'test_loader',
+		descri: '测试用模块加载器引用jplus' + $.fn.refresh + $.fn.listen + $.fn.scanView + $.define + $.module + $.render + $.fn.render
+	})
+})
+</script>
+</body>
+</html>
