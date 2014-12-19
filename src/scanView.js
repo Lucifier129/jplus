@@ -1,25 +1,4 @@
 //scanView
-var $ = window.jQuery || window.Zepto
-
-if ($ === undefined) {
-	if (isFn(global.define) && (define.amd || define.cmd)) {
-		define({
-			agent: createProxy,
-			observe: createObserver
-		})
-	} else {
-		global.agent = createProxy
-		global.observe = createObserver
-		if (global.$$ === undefined) {
-			global.$$ = createProxy
-		}
-	}
-	return
-}
-
-$.agent = createProxy
-$.observe = createObserver
-
 var $plus = $.plus = {
 	attr: 'js',
 	filterAttr: ['noscan', 'app'],
@@ -99,7 +78,6 @@ Scaner.prototype = {
 		return this.viewModel
 	}
 }
-
 $.fn.scanView = function(rescan) {
 	var vm = new Scaner(this)
 	if ($.plus.debug) {

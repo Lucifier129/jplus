@@ -1,1 +1,0 @@
-define('测试代理seajs')
