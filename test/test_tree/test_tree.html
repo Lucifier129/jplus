@@ -25,6 +25,12 @@
     })
 
 }())
+
+function getTheDayBeforeYesteday(date) {
+    var result = new Date(date)
+    result.setDate(result.getDate() - 2)
+    return result
+}
 </script>
 </body>
 </html>

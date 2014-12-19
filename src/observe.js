@@ -1,15 +1,37 @@
 //observe.js
 
-function throwErr(msg) {
-	throw new Error(msg)
-}
-
 function randomStr(prefix) {
 	return prefix + Math.random().toString(36).substr(2)
 }
 
-var nextTick = function(fn) {
-	return setTimeout(fn, 4)
+function nextTick(fn) {
+	return setTimeout(fn, 0)
+}
+
+function clone(obj) {
+	var newObj
+	if (isObj(obj)) {
+		newObj = extend(true, {}, obj)
+	} else if (isArr(obj)) {
+		newObj = []
+		each(obj, function(value, index) {
+			newObj[index] = clone(value)
+		})
+	} else {
+		newObj = obj
+	}
+	return newObj
+}
+
+if (!Array.prototype.indexOf) {
+	Array.prototype.indexOf = function(value) {
+		for (var i = this.length - 1; i >= 0; i--) {
+			if (this[i] === value) {
+				return i
+			}
+		}
+		return -1
+	}
 }
 
 //refer to underscore
@@ -114,18 +136,6 @@ var head = doc.getElementsByTagName('head')[0]
 var comment = doc.createComment('Kill IE6/7/8')
 var NATIVE_RE = /\[native code\]/
 var ES5
-
-if (!Array.prototype.indexOf) {
-	Array.prototype.indexOf = function(value) {
-		for (var i = this.length - 1; i >= 0; i--) {
-			if (this[i] === value) {
-				return i
-			}
-		}
-		return -1
-	}
-}
-
 var defineProperty
 
 if (NATIVE_RE.test(Object.defineProperty) && NATIVE_RE.test(Object.create)) {
@@ -146,7 +156,7 @@ if (defineProperty) {
 			return
 		}
 		var value = obj[propName]
-		var oldValue = typeof value === 'object' ? isArr(value) ? value.concat() : extend(true, {}, value) : value
+		var oldValue = clone(value)
 		var holding
 
 		function trigger() {
@@ -155,7 +165,7 @@ if (defineProperty) {
 					callback.call(obj, value, propName, oldValue)
 				})
 			})
-			oldValue = typeof value === 'object' ? isArr(value) ? value.concat() : extend(true, {}, value) : value
+			oldValue = clone(value)
 			holding = false
 		}
 
@@ -182,7 +192,7 @@ if (defineProperty) {
 		var holding = {}
 
 		obj.each(function(v, key) {
-			oldValues[key] = isObj(v) ? extend(true, {}, v) : isArr(v) ? v.concat() : v
+			oldValues[key] = clone(v)
 		})
 
 		function trigger(propName, events) {
@@ -196,13 +206,12 @@ if (defineProperty) {
 					callback.call(obj, value, propName, oldValue)
 				})
 			})
-			oldValues[propName] = typeof value === 'object' ? isArr(value) ? value.concat() : extend(true, {}, value) : value
+			oldValues[propName] = clone(value)
 			holding[propName] = false
 		}
 
 		obj.onpropertychange = function(e) {
-			e = e || window.event
-			var propName = e.propertyName
+			var propName = (e || window.event).propertyName
 			var events = this.__events__
 			if (propName in events) {
 				if (holding[propName]) {
@@ -223,7 +232,7 @@ function checkPropName(propName) {
 	}
 	if (propName in comment) {
 		throw new Error(
-			'If you want to support IE6/7/8. The property name [' + propName + '] can not be observed, ' +
+			'If you want to support IE6/7/8. The property name [ ' + propName + ' ] can not be observed, ' +
 			'because DOM has the same property name. ' +
 			'You can use the [observe.ES5 = true] to ignore IE6/7/8.'
 		)
@@ -236,9 +245,10 @@ var observer = {
 		checkPropName(prop)
 		observeProperty(this, prop)
 		name = name || randomStr('observer')
-		this.__events__[prop] = this.__events__[prop] || {}
-		this.__events__[prop][name] = this.__events__[prop][name] || []
-		this.__events__[prop][name].push(callback)
+
+		var events = this.__events__[prop] = this.__events__[prop] || {}
+		events[name] = events[name] || []
+		events[name].push(callback)
 		return this
 	},
 	on: function() {
@@ -280,7 +290,7 @@ var observer = {
 	_bang: function(prop, data, name) {
 		var that = this
 		var currentValue = that[prop]
-		each(this.__events__[prop][name] || [], function(callback) {
+		each(this.__events__[prop][name], function(callback) {
 			callback.call(that, data, prop, currentValue)
 		})
 	},
@@ -414,7 +424,7 @@ var observer = {
 
 		function wrapper() {
 			callback.apply(that, arguments)
-			that.off(prop)
+			that.off(wrapper)
 		}
 		return this.on(prop, wrapper)
 	},
@@ -446,9 +456,23 @@ var observer = {
 			}
 			return this.on(props, wrapper)
 		} else if (isStr(props)) {
-			return this.on(props, callback)
+			props = props.split(' ')
+			return props.length > 1 ? this.tie(props, callback) : this.on(props[0], callback)
 		}
 		return this
+	},
+
+	collect: function(prop, total, callback) {
+		var that = this
+		var dataList = []
+		function wrapper(data) {
+			dataList.push(data)
+			if (dataList.length === total) {
+				callback.apply(that, dataList)
+				that.off(wrapper)
+			}
+		}
+		return this.on(prop, wrapper)
 	}
 }
 
