@@ -2,7 +2,6 @@
 var $plus = $.plus = {
 	attr: 'js',
 	filterAttr: ['noscan', 'app'],
-	debug: false,
 	viewModel: []
 }
 
@@ -49,6 +48,7 @@ Scaner.prototype = {
 				vm['lastValue'] = null
 				vm['alive'] = $node.attr('unalive') !== undefined ? false : true
 				vm['template'] = $node.clone()
+				vm['parent'] = $node[0].parentNode
 			}
 		})
 		return this
@@ -79,11 +79,11 @@ Scaner.prototype = {
 	}
 }
 $.fn.scanView = function(rescan) {
-	var vm = new Scaner(this)
-	if ($.plus.debug) {
-		var elem = this[0]
-		$plus.viewModel[elem.vmIndex = typeof elem.vmIndex === 'number' ? elem.vmIndex : $plus.viewModel.length] = vm
+	var elem = this[0]
+	var vmIndex = elem.vmIndex
+	if (typeof vmIndex === 'number' && !rescan) {
+		return $plus.viewModel[vmIndex].get()
 	}
-
+	var vm = $plus.viewModel[elem.vmIndex || (elem.vmIndex = $plus.viewModel.length)] = new Scaner(this)
 	return vm.scan().get()
 }

@@ -23,7 +23,7 @@ Sync.prototype = {
 		if (_.isEqual(data, vm.lastValue)) {
 			return
 		}
-		vm.lastValue = typeof data === 'object' ? isArr(data) ? data.concat() : extend(true, {}, data) : data
+		vm.lastValue = clone(data)
 
 		var instance = vm.instance
 		var method = vm.method
@@ -38,6 +38,7 @@ Sync.prototype = {
 				if (vm.alive) {
 					if (dataLen <= elemLen) {
 						instance.slice(dataLen).remove()
+						vm.instance = instance.slice(0, dataLen)
 						for (i = 0; i < dataLen; i += 1) {
 							$item = $(instance[i])
 							method.apply($item, params.concat(data[i]))
@@ -55,15 +56,19 @@ Sync.prototype = {
 							}
 							method.apply($item, params.concat(data[i]))
 						}
-						if (frag.childNodes.length) {
-							var last = instance[elemLen - 1]
-							var next
-							if (next = last.nextSibling) {
-								last.parentNode.insertBefore(frag, next)
-							} else {
-								last.parentNode.appendChild(frag)
-							}
 
+						if (frag.childNodes.length) {
+							if (!elemLen) {
+								vm.parent.appendChild(frag)
+							} else {
+								var last = instance[elemLen - 1]
+								var next
+								if (next = last.nextSibling) {
+									last.parentNode.insertBefore(frag, next)
+								} else {
+									last.parentNode.appendChild(frag)
+								}
+							}
 						}
 						temp = frag = null
 					}
@@ -80,7 +85,6 @@ Sync.prototype = {
 			}
 
 		} else {
-
 			if (!isFn(data)) {
 				return
 			}
@@ -90,7 +94,6 @@ Sync.prototype = {
 		}
 	}
 }
-
 
 $.fn.refresh = function(dataModel, options) {
 	var that = this

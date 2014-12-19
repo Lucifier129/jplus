@@ -40,7 +40,6 @@ var toStr = calling(objProto.toString)
 var hasOwn = calling(objProto.hasOwnProperty)
 var slice = calling(Array.prototype.slice)
 
-
 function isType(type) {
 	return function(obj) {
 		return obj == null ? obj : toStr(obj) === '[object ' + type + ']'
@@ -58,7 +57,6 @@ if (!String.prototype.trim) {
 		return this.replace(rtrim, '')
 	}
 }
-
 
 var _ = {
 	keys: Object.keys || function(obj) {
@@ -78,31 +76,6 @@ var _ = {
 		return keys
 
 	},
-
-	values: function(obj) {
-
-		var keys = this.keys(obj)
-		var len = keys.length
-		var values = new Array(len)
-
-		for (var i = 0; i < len; i += 1) {
-			values[i] = obj[keys[i]]
-		}
-
-		return values
-	},
-
-	invert: function(obj) {
-		var ret = {}
-		var keys = this.keys(obj)
-
-		for (var i = 0, len = keys.len; i < len; i++) {
-			ret[obj[keys[i]]] = keys[i]
-		}
-
-		return ret
-	},
-
 	parse: function(descri) {
 		if (!isStr(descri)) {
 			return {}
@@ -196,16 +169,13 @@ function isSameType(arr) {
 	var i
 	if (len > 1) {
 		type = toStr(arr[0])
-		for (i = len - 1; i >= 0; i--) {
+		for (i = len - 1; i > 0; i--) {
 			if (toStr(arr[i]) !== type) {
 				return false
 			}
 		}
-		return true
-	} else {
-		return true
 	}
-	return false
+	return true
 }
 
 var inherit = Object.create || function(proto) {
@@ -453,7 +423,6 @@ function checkPropName(propName) {
 		)
 	}
 }
-
 
 var observer = {
 	_add: function(prop, callback, name) {
@@ -726,7 +695,6 @@ if ($ === global) {
 var $plus = $.plus = {
 	attr: 'js',
 	filterAttr: ['noscan', 'app'],
-	debug: false,
 	viewModel: []
 }
 
@@ -773,6 +741,7 @@ Scaner.prototype = {
 				vm['lastValue'] = null
 				vm['alive'] = $node.attr('unalive') !== undefined ? false : true
 				vm['template'] = $node.clone()
+				vm['parent'] = $node[0].parentNode
 			}
 		})
 		return this
@@ -803,12 +772,12 @@ Scaner.prototype = {
 	}
 }
 $.fn.scanView = function(rescan) {
-	var vm = new Scaner(this)
-	if ($.plus.debug) {
-		var elem = this[0]
-		$plus.viewModel[elem.vmIndex = typeof elem.vmIndex === 'number' ? elem.vmIndex : $plus.viewModel.length] = vm
+	var elem = this[0]
+	var vmIndex = elem.vmIndex
+	if (typeof vmIndex === 'number' && !rescan) {
+		return $plus.viewModel[vmIndex].get()
 	}
-
+	var vm = $plus.viewModel[elem.vmIndex || (elem.vmIndex = $plus.viewModel.length)] = new Scaner(this)
 	return vm.scan().get()
 }
 //refresh
@@ -836,7 +805,7 @@ Sync.prototype = {
 		if (_.isEqual(data, vm.lastValue)) {
 			return
 		}
-		vm.lastValue = typeof data === 'object' ? isArr(data) ? data.concat() : extend(true, {}, data) : data
+		vm.lastValue = clone(data)
 
 		var instance = vm.instance
 		var method = vm.method
@@ -851,6 +820,7 @@ Sync.prototype = {
 				if (vm.alive) {
 					if (dataLen <= elemLen) {
 						instance.slice(dataLen).remove()
+						vm.instance = instance.slice(0, dataLen)
 						for (i = 0; i < dataLen; i += 1) {
 							$item = $(instance[i])
 							method.apply($item, params.concat(data[i]))
@@ -868,15 +838,19 @@ Sync.prototype = {
 							}
 							method.apply($item, params.concat(data[i]))
 						}
-						if (frag.childNodes.length) {
-							var last = instance[elemLen - 1]
-							var next
-							if (next = last.nextSibling) {
-								last.parentNode.insertBefore(frag, next)
-							} else {
-								last.parentNode.appendChild(frag)
-							}
 
+						if (frag.childNodes.length) {
+							if (!elemLen) {
+								vm.parent.appendChild(frag)
+							} else {
+								var last = instance[elemLen - 1]
+								var next
+								if (next = last.nextSibling) {
+									last.parentNode.insertBefore(frag, next)
+								} else {
+									last.parentNode.appendChild(frag)
+								}
+							}
 						}
 						temp = frag = null
 					}
@@ -893,7 +867,6 @@ Sync.prototype = {
 			}
 
 		} else {
-
 			if (!isFn(data)) {
 				return
 			}
@@ -903,7 +876,6 @@ Sync.prototype = {
 		}
 	}
 }
-
 
 $.fn.refresh = function(dataModel, options) {
 	var that = this
@@ -920,7 +892,6 @@ $.fn.refresh = function(dataModel, options) {
 //plus.js
 
 extend($.fn, {
-
 	render: function(api) {
 		var that = this
 		var $fn = $.fn
@@ -966,7 +937,6 @@ $.define = function(name, callback) {
 	model = callback(model) || model
 	return target.listen(model)
 };
-
 
 $.render = function(models) {
 	$('[render]').each(function() {

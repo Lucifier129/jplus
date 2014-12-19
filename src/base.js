@@ -10,7 +10,6 @@ var toStr = calling(objProto.toString)
 var hasOwn = calling(objProto.hasOwnProperty)
 var slice = calling(Array.prototype.slice)
 
-
 function isType(type) {
 	return function(obj) {
 		return obj == null ? obj : toStr(obj) === '[object ' + type + ']'
@@ -28,7 +27,6 @@ if (!String.prototype.trim) {
 		return this.replace(rtrim, '')
 	}
 }
-
 
 var _ = {
 	keys: Object.keys || function(obj) {
@@ -48,31 +46,6 @@ var _ = {
 		return keys
 
 	},
-
-	values: function(obj) {
-
-		var keys = this.keys(obj)
-		var len = keys.length
-		var values = new Array(len)
-
-		for (var i = 0; i < len; i += 1) {
-			values[i] = obj[keys[i]]
-		}
-
-		return values
-	},
-
-	invert: function(obj) {
-		var ret = {}
-		var keys = this.keys(obj)
-
-		for (var i = 0, len = keys.len; i < len; i++) {
-			ret[obj[keys[i]]] = keys[i]
-		}
-
-		return ret
-	},
-
 	parse: function(descri) {
 		if (!isStr(descri)) {
 			return {}
@@ -166,16 +139,13 @@ function isSameType(arr) {
 	var i
 	if (len > 1) {
 		type = toStr(arr[0])
-		for (i = len - 1; i >= 0; i--) {
+		for (i = len - 1; i > 0; i--) {
 			if (toStr(arr[i]) !== type) {
 				return false
 			}
 		}
-		return true
-	} else {
-		return true
 	}
-	return false
+	return true
 }
 
 var inherit = Object.create || function(proto) {

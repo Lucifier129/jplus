@@ -1,7 +1,6 @@
 //plus.js
 
 extend($.fn, {
-
 	render: function(api) {
 		var that = this
 		var $fn = $.fn
@@ -47,7 +46,6 @@ $.define = function(name, callback) {
 	model = callback(model) || model
 	return target.listen(model)
 };
-
 
 $.render = function(models) {
 	$('[render]').each(function() {

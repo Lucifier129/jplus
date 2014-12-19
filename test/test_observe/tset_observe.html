@@ -81,7 +81,8 @@
 		test_off_one_ns: '解除一个属性下某个命名空间的所有事件绑定',
 		test_off_fn: '测试解除具体事件函数，不管它在何个属性下',
 		test_off_fn_one: '测试解除具体属性下的具体事件函数',
-		test_off_all: '测试取消全部事件'
+		test_off_all: '测试取消全部事件',
+		test_collect: '测试collect方法'
 	}
 
 	//测试一步到位的初始化并侦听
@@ -479,7 +480,20 @@
 	test_off_all.trigger('name', '自主触发name事件，然后链式调用off，解除全部，再触发name事件，以及改变name属性，如无意外，都解除后都无事件反应')
 	.off().trigger('name', '事件被取消完了，这条消息不显示').name = '属性变化当然也不会产生反应'
 
+	//测试collect方法
+	var test_collect = observe({
+		name: 'test_collect',
+		count: 0
+	})
+	var dataArr = [1, 2, 3, 4, 5, 6, 7, 8]
 
+	test_collect.collect('collect', dataArr.length, function() {
+		log.apply(window, ['test_collect'].concat([].slice.call(arguments)))
+	})
+
+	for (var i = 0, len = dataArr.length; i < len; i += 1) {
+		test_collect.trigger('collect', dataArr[i])
+	}
 
 
 }())

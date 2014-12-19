@@ -17,32 +17,30 @@
         <button id="btn">随机改变数组长度和排序</button>
         <ul id="test">
             <li js="text:num"></li>
-            <li js="text:num"></li>
-            <li js="text:num"></li>
-            <li js="text:num"></li>
-            <li js="text:num"></li>
-            <li js="text:num"></li>
-            <li js="text:num"></li>
-            <li js="text:num"></li>
-            <li js="text:num"></li>
-            <li js="text:num"></li>
+            <li js="num"></li>
+            <li js="num"></li>
+            <li js="num"></li>
+            <li js="num"></li>
+            <li js="num"></li>
+            <li js="num"></li>
+            <li js="num"></li>
+            <li js="num"></li>
+            <li js="num"></li>
         </ul>
 <script type="text/javascript" src="../vendor/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="../../dist/jplus-debug.js"></script>
 <script type="text/javascript">
 (function() {
-    $.plus.debug = true
-
     var data = []
     for (var i = 0; i < 20; i += 1) {
         data[i] = i
     }
 
     $('#test').refresh({num:data})
-
+    var index = 0
     $('#btn').on('click', function() {
-        var index = Math.floor(Math.random() * (data.length - 1)) + 2
         $('#test').refresh({num: data.slice(0, index).sort(function() { return Math.random() - 0.5})})
+        index = Math.floor(Math.random() * (data.length - 1))
     })
 
 }())

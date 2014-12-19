@@ -239,7 +239,6 @@ function checkPropName(propName) {
 	}
 }
 
-
 var observer = {
 	_add: function(prop, callback, name) {
 		checkPropName(prop)
