@@ -3,9 +3,10 @@
  *Author: Jade
  *Date: 2014.11.20
  */
-;(function(factory) {
-	if (typeof define === 'function') {
-		var paths = {}
+;
+(function(factory) {
+	var paths
+	try {
 		if (define.amd) {
 			paths = requirejs.s.contexts._.config.paths
 		} else if (define.cmd) {
@@ -23,8 +24,10 @@
 				factory($, window)
 				return $
 			})
+		} else {
+			throw new Error('No jQuery and Zepto')
 		}
-	} else {
+	} catch (e) {
 		factory(window.jQuery || window.Zepto || window, window)
 	}
 })(function($, global) {
@@ -60,36 +63,30 @@ if (!String.prototype.trim) {
 
 var _ = {
 	keys: Object.keys || function(obj) {
-
-		if (!isObj(obj)) {
-			return []
-		}
-
 		var keys = []
-
+		if (!isObj(obj)) {
+			return keys
+		}
 		for (var key in obj) {
 			if (hasOwn(obj, key)) {
 				keys.push(key)
 			}
 		}
-
 		return keys
-
 	},
 	parse: function(descri) {
-		if (!isStr(descri)) {
-			return {}
-		}
 		var ret = {}
+		if (!isStr(descri)) {
+			return ret
+		}
 		var group = descri.trim().split(';')
 		each(group, function(value) {
 			value = value.trim().split(':')
 			if (value.length < 2) {
-				return ret[value[0]] = ''
+				return ret[value[0].trim()] = ''
 			}
 			ret[value[1].trim()] = value[0].trim()
 		})
-
 		return ret
 	}
 }
@@ -99,26 +96,28 @@ function each(obj, fn, context) {
 		return obj
 	}
 	var len = obj.length
+	var i = 0
 	var ret
 
 	if (len === +len && len > 0) {
-		for (var i = 0; i < len; i += 1) {
-			ret = fn.call(context || global, obj[i], i, obj)
+		for (; i < len; i += 1) {
+			ret = fn.call(context || global, obj[i], i)
 			if (ret !== undefined) {
 				return ret
 			}
 		}
 		return obj
 	}
-	for (var key in obj) {
-		if (hasOwn(obj, key)) {
-			ret = fn.call(context || global, obj[key], key, obj)
-			if (ret !== undefined) {
-				return ret
-			}
+	var keys = _.keys(obj)
+	var key
+	len = keys.length
+	for (; i < len; i += 1) {
+		key = keys[i]
+		ret = fn.call(context || global, obj[key], key)
+		if (ret !== undefined) {
+			return ret
 		}
 	}
-
 	return obj
 }
 
@@ -794,25 +793,27 @@ Sync.prototype = {
 	refresh: function() {
 		var viewModel = this.viewModel
 		var dataModel = this.dataModel
-		for (var key in dataModel) {
-			if (!(key in viewModel)) {
-				continue
+		var keys = _.keys(viewModel)
+		var data, key
+		for (var i = 0, len = keys.length; i < len; i += 1) {
+			key = keys[i]
+			data = dataModel[key]
+			if (data !== undefined) {
+				this.render(viewModel[key], data)
 			}
-			this.render(viewModel[key], dataModel[key], key)
 		}
 	},
-	render: function(vm, data, key) {
+	render: function(vm, data) {
 		if (_.isEqual(data, vm.lastValue)) {
 			return
 		}
 		vm.lastValue = clone(data)
 
 		var instance = vm.instance
-		var method = vm.method
+		var method = $fn[vm.method]
 		var params = vm.params
 
-		if (vm.method in $fn) {
-			method = $fn[method]
+		if (typeof method === 'function') {
 			if (isSameType(data)) {
 				var elemLen = instance.length
 				var dataLen = data.length
@@ -822,8 +823,7 @@ Sync.prototype = {
 						instance.slice(dataLen).remove()
 						vm.instance = instance.slice(0, dataLen)
 						for (i = 0; i < dataLen; i += 1) {
-							$item = $(instance[i])
-							method.apply($item, params.concat(data[i]))
+							method.apply($(instance[i]), params.concat(data[i]))
 						}
 					} else {
 						var temp = vm.template
@@ -832,9 +832,8 @@ Sync.prototype = {
 							if (i < elemLen) {
 								$item = $(instance[i])
 							} else {
-								$item = temp.clone().each(function() {
-									push(instance, frag.appendChild(this))
-								})
+								$item = temp.clone()
+								push(instance, frag.appendChild($item[0]))
 							}
 							method.apply($item, params.concat(data[i]))
 						}
@@ -857,11 +856,9 @@ Sync.prototype = {
 				} else {
 					var len = Math.min(elemLen, dataLen)
 					for (i = 0; i < len; i += 1) {
-						$item = $(instance[i])
-						method.apply($item, params.concat(data[i]))
+						method.apply($(instance[i]), params.concat(data[i]))
 					}
 				}
-
 			} else {
 				method.apply(instance, params.concat(data))
 			}
@@ -872,7 +869,7 @@ Sync.prototype = {
 			}
 			method = data
 			params = this.dataModel[vm.method]
-			method.apply(instance, [].concat(params || []))
+			method.apply(instance, [].concat(params))
 		}
 	}
 }
@@ -884,7 +881,10 @@ $.fn.refresh = function(dataModel, options) {
 		new Sync(dataModel, this.scanView(), elem).refresh()
 	} else if (isArr(dataModel)) {
 		each(dataModel, function(dm, index) {
-			new Sync(dm, that.eq(index).scanView(), elem).refresh()
+			var $item = that.eq(index)
+			if ($item.length) {
+				new Sync(dm, $item.scanView(), elem).refresh()
+			}
 		})
 	}
 	return this

@@ -12,25 +12,27 @@ Sync.prototype = {
 	refresh: function() {
 		var viewModel = this.viewModel
 		var dataModel = this.dataModel
-		for (var key in dataModel) {
-			if (!(key in viewModel)) {
-				continue
+		var keys = _.keys(viewModel)
+		var data, key
+		for (var i = 0, len = keys.length; i < len; i += 1) {
+			key = keys[i]
+			data = dataModel[key]
+			if (data !== undefined) {
+				this.render(viewModel[key], data)
 			}
-			this.render(viewModel[key], dataModel[key], key)
 		}
 	},
-	render: function(vm, data, key) {
+	render: function(vm, data) {
 		if (_.isEqual(data, vm.lastValue)) {
 			return
 		}
 		vm.lastValue = clone(data)
 
 		var instance = vm.instance
-		var method = vm.method
+		var method = $fn[vm.method]
 		var params = vm.params
 
-		if (vm.method in $fn) {
-			method = $fn[method]
+		if (typeof method === 'function') {
 			if (isSameType(data)) {
 				var elemLen = instance.length
 				var dataLen = data.length
@@ -40,8 +42,7 @@ Sync.prototype = {
 						instance.slice(dataLen).remove()
 						vm.instance = instance.slice(0, dataLen)
 						for (i = 0; i < dataLen; i += 1) {
-							$item = $(instance[i])
-							method.apply($item, params.concat(data[i]))
+							method.apply($(instance[i]), params.concat(data[i]))
 						}
 					} else {
 						var temp = vm.template
@@ -50,9 +51,8 @@ Sync.prototype = {
 							if (i < elemLen) {
 								$item = $(instance[i])
 							} else {
-								$item = temp.clone().each(function() {
-									push(instance, frag.appendChild(this))
-								})
+								$item = temp.clone()
+								push(instance, frag.appendChild($item[0]))
 							}
 							method.apply($item, params.concat(data[i]))
 						}
@@ -75,11 +75,9 @@ Sync.prototype = {
 				} else {
 					var len = Math.min(elemLen, dataLen)
 					for (i = 0; i < len; i += 1) {
-						$item = $(instance[i])
-						method.apply($item, params.concat(data[i]))
+						method.apply($(instance[i]), params.concat(data[i]))
 					}
 				}
-
 			} else {
 				method.apply(instance, params.concat(data))
 			}
@@ -90,7 +88,7 @@ Sync.prototype = {
 			}
 			method = data
 			params = this.dataModel[vm.method]
-			method.apply(instance, [].concat(params || []))
+			method.apply(instance, [].concat(params))
 		}
 	}
 }
@@ -102,7 +100,10 @@ $.fn.refresh = function(dataModel, options) {
 		new Sync(dataModel, this.scanView(), elem).refresh()
 	} else if (isArr(dataModel)) {
 		each(dataModel, function(dm, index) {
-			new Sync(dm, that.eq(index).scanView(), elem).refresh()
+			var $item = that.eq(index)
+			if ($item.length) {
+				new Sync(dm, $item.scanView(), elem).refresh()
+			}
 		})
 	}
 	return this

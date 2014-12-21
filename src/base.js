@@ -30,36 +30,30 @@ if (!String.prototype.trim) {
 
 var _ = {
 	keys: Object.keys || function(obj) {
-
-		if (!isObj(obj)) {
-			return []
-		}
-
 		var keys = []
-
+		if (!isObj(obj)) {
+			return keys
+		}
 		for (var key in obj) {
 			if (hasOwn(obj, key)) {
 				keys.push(key)
 			}
 		}
-
 		return keys
-
 	},
 	parse: function(descri) {
-		if (!isStr(descri)) {
-			return {}
-		}
 		var ret = {}
+		if (!isStr(descri)) {
+			return ret
+		}
 		var group = descri.trim().split(';')
 		each(group, function(value) {
 			value = value.trim().split(':')
 			if (value.length < 2) {
-				return ret[value[0]] = ''
+				return ret[value[0].trim()] = ''
 			}
 			ret[value[1].trim()] = value[0].trim()
 		})
-
 		return ret
 	}
 }
@@ -69,26 +63,28 @@ function each(obj, fn, context) {
 		return obj
 	}
 	var len = obj.length
+	var i = 0
 	var ret
 
 	if (len === +len && len > 0) {
-		for (var i = 0; i < len; i += 1) {
-			ret = fn.call(context || global, obj[i], i, obj)
+		for (; i < len; i += 1) {
+			ret = fn.call(context || global, obj[i], i)
 			if (ret !== undefined) {
 				return ret
 			}
 		}
 		return obj
 	}
-	for (var key in obj) {
-		if (hasOwn(obj, key)) {
-			ret = fn.call(context || global, obj[key], key, obj)
-			if (ret !== undefined) {
-				return ret
-			}
+	var keys = _.keys(obj)
+	var key
+	len = keys.length
+	for (; i < len; i += 1) {
+		key = keys[i]
+		ret = fn.call(context || global, obj[key], key)
+		if (ret !== undefined) {
+			return ret
 		}
 	}
-
 	return obj
 }
 

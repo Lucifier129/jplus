@@ -3,9 +3,10 @@
  *Author: Jade
  *Date: 2014.11.20
  */
-;(function(factory) {
-	if (typeof define === 'function') {
-		var paths = {}
+;
+(function(factory) {
+	var paths
+	try {
 		if (define.amd) {
 			paths = requirejs.s.contexts._.config.paths
 		} else if (define.cmd) {
@@ -23,8 +24,10 @@
 				factory($, window)
 				return $
 			})
+		} else {
+			throw new Error('No jQuery and Zepto')
 		}
-	} else {
+	} catch (e) {
 		factory(window.jQuery || window.Zepto || window, window)
 	}
 })(function($, global) {
