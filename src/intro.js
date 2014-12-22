@@ -30,4 +30,4 @@
 	} catch (e) {
 		factory(window.jQuery || window.Zepto || window, window)
 	}
-})(function($, global) {
+})(function($, global, undefined) {
