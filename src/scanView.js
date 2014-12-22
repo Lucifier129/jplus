@@ -79,6 +79,9 @@ Scaner.prototype = {
 	}
 }
 $.fn.scanView = function(rescan) {
+	if (!this.length) {
+		return {}
+	}
 	var elem = this[0]
 	var vmIndex = elem.vmIndex
 	if (typeof vmIndex === 'number' && !rescan) {

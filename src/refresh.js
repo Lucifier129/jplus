@@ -39,8 +39,14 @@ Sync.prototype = {
 				var $item, i
 				if (vm.alive) {
 					if (dataLen <= elemLen) {
-						instance.slice(dataLen).remove()
-						vm.instance = instance.slice(0, dataLen)
+						instance.slice(dataLen).each(function() {
+							var vmIndex = this.vmIndex
+							if (typeof vmIndex === 'number') {
+								$plus.viewModel[vmIndex] = null
+							}
+						}).remove()
+						instance = vm.instance = instance.slice(0, dataLen)
+						instance.prevObject = null
 						for (i = 0; i < dataLen; i += 1) {
 							method.apply($(instance[i]), params.concat(data[i]))
 						}

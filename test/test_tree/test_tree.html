@@ -10,27 +10,55 @@
         <meta http-equiv="cleartype" content="on">
         <style type="text/css">
             body { background:#fafafa;}
+            #btn { width: 100px; height: 30px; margin:20px auto; background:#eaeaea; color:#333; text-align: center; line-height: 30px;}
         </style>
 
     </head>
     <body>
-        <p js="render: obj"></p>
+        <table>
+            <tr js="refresh:list">
+                <td js="text:num"></td>
+            </tr>
+        </table>
+        <div id="btn">run</div>
 <script type="text/javascript" src="../vendor/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="../../dist/jplus-debug.js"></script>
 <script type="text/javascript">
 (function() {
-    $.plus.debug = true
-    $('body').refresh({
-        num: [1,3,4,5,6,7,8,9,0]
+
+    var data1 = {
+        list: [{
+            num: [1, 3, 4, 7, 9]
+        }, {
+            num: [2, 4, 6, 8, 10]
+        }]
+    }
+
+    var data2 = {
+        list: [{
+            num: [1, 2, 3, 4, 5]
+        }]
+    }
+
+    $('table').refresh({
+        list: {
+            num: [1, 2, 3, 4, 5, 67, 8, 9, 4, 234, 23, 42, 34, 234, 23, 423, 4, 23, 42, 34, 23, 423, 42, 34, 123]
+        }
+    })
+
+    var data = [data1, data2, {
+        list: []
+    }]
+
+    $('#btn').on('click', function() {
+        var ret = data.sort(function() {
+            return Math.random() - 0.5
+        })[0]
+        console.log(ret)
+        $('table').refresh(ret)
     })
 
 }())
-
-function getTheDayBeforeYesteday(date) {
-    var result = new Date(date)
-    result.setDate(result.getDate() - 2)
-    return result
-}
 </script>
 </body>
 </html>
