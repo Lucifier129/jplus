@@ -8,6 +8,7 @@ var $plus = $.plus = {
 var push = calling(Array.prototype.push)
 
 function Scaner($startNode) {
+	$startNode.prevObject = $startNode.context = null
 	this.$startNode = $startNode
 	this.viewModel = {}
 }
@@ -41,14 +42,17 @@ Scaner.prototype = {
 			if (vm.instance) {
 				push(vm.instance, $node[0])
 			} else {
+				$node.prevObject = null
 				method = method.split('-')
 				vm['method'] = method[0]
 				vm['params'] = method.slice(1)
 				vm['instance'] = $node
 				vm['lastValue'] = null
-				vm['alive'] = $node.attr('unalive') !== undefined ? false : true
+				vm['alive'] = $node.attr('unalive') != undefined ? false : true
 				vm['template'] = $node.clone()
-				vm['parent'] = $node[0].parentNode
+				vm['template'].prevObject = null
+				var parent = $node[0].parentNode
+				vm['parent'] = /fragment/i.test(parent.nodeName) ? null : parent
 			}
 		})
 		return this

@@ -64,7 +64,7 @@ Sync.prototype = {
 						}
 
 						if (frag.childNodes.length) {
-							if (!elemLen) {
+							if (!elemLen && vm.parent) {
 								vm.parent.appendChild(frag)
 							} else {
 								var last = instance[elemLen - 1]
