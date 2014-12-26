@@ -50,9 +50,11 @@ var _ = {
 		each(group, function(value) {
 			value = value.trim().split(':')
 			if (value.length < 2) {
-				return ret[value[0].trim()] = ''
+				return
 			}
-			ret[value[1].trim()] = value[0].trim()
+			var v1 = value[1].trim()
+			ret[v1] = ret[v1] || {}
+			ret[v1][value[0].trim()] = 1
 		})
 		return ret
 	}
