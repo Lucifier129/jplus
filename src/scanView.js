@@ -20,7 +20,7 @@ Scaner.prototype = {
 		var startNode = this.$startNode[0]
 		var id = startNode.id = startNode.id || 'filter_id_for_scaner'
 		each($plus.filterAttr, function(attr) {
-			var items = $([id, '[' + attr + ']', '[' + $plus.attr + ']'].join(' '))
+			var items = $(['#' + id, '[' + attr + ']', '[' + $plus.attr + ']'].join(' '))
 			filterNode.push.apply(filterNode, slice(items))
 		})
 		if (id === 'filter_id_for_scaner') {
@@ -39,19 +39,26 @@ Scaner.prototype = {
 		var viewModel = this.viewModel
 		each(_.parse($node.attr($plus.attr)), function(method, alias) {
 			var vm = viewModel[alias] = viewModel[alias] || {}
+			var elem = $node[0]
+			var $info = elem['$info'] = elem['$info'] || {}
+			$info[alias] = $info[alias] || {
+				method: [],
+				params: []
+			}
+			each(method, function(v, methodName) {
+				methodName = methodName.split('-')
+				$info[alias].method.push(methodName[0])
+				$info[alias].params.push(methodName.slice(1))
+			})
 			if (vm.instance) {
-				push(vm.instance, $node[0])
+				push(vm.instance, elem)
 			} else {
-				$node.prevObject = null
-				method = method.split('-')
-				vm['method'] = method[0]
-				vm['params'] = method.slice(1)
-				vm['instance'] = $node
-				vm['lastValue'] = null
+				vm['instance'] = $(elem)
+				vm['lastValue'] = vm['instance'].context = null
 				vm['alive'] = $node.attr('unalive') != undefined ? false : true
-				vm['template'] = $node.clone()
-				vm['template'].prevObject = null
-				var parent = $node[0].parentNode
+				vm['template'] = elem.cloneNode(true)
+				vm['template']['$info'] = $info
+				var parent = elem.parentNode
 				vm['parent'] = /fragment/i.test(parent.nodeName) ? null : parent
 			}
 		})
@@ -69,7 +76,6 @@ Scaner.prototype = {
 				$this.prevObject = $this.context = null
 				that.parse($this)
 			})
-
 		return this
 	},
 
