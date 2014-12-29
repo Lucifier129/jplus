@@ -160,13 +160,13 @@ if (defineProperty) {
 		var holding
 
 		function trigger() {
+			holding = false
 			each(obj.__events__[propName], function(callbacks) {
 				each(callbacks, function(callback) {
 					callback.call(obj, value, propName, oldValue)
 				})
 			})
 			oldValue = clone(value)
-			holding = false
 		}
 
 		defineProperty(obj, propName, {
@@ -198,6 +198,7 @@ if (defineProperty) {
 		function trigger(propName, events) {
 			var oldValue = oldValues[propName]
 			var value = obj[propName]
+			holding[propName] = false
 			if (_.isEqual(value, oldValue)) {
 				return
 			}
@@ -207,7 +208,6 @@ if (defineProperty) {
 				})
 			})
 			oldValues[propName] = clone(value)
-			holding[propName] = false
 		}
 
 		obj.onpropertychange = function(e) {
@@ -464,10 +464,24 @@ var observer = {
 	collect: function(prop, total, callback) {
 		var that = this
 		var dataList = []
+
 		function wrapper(data) {
 			dataList.push(data)
 			if (dataList.length === total) {
 				callback.apply(that, dataList)
+				that.off(wrapper)
+			}
+		}
+		return this.on(prop, wrapper)
+	},
+
+	hold: function(prop, total, callback) {
+		var that = this
+		var count = 0
+
+		function wrapper(data) {
+			if (++count === total) {
+				callback.call(that, data)
 				that.off(wrapper)
 			}
 		}
