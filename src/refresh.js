@@ -68,11 +68,16 @@ Sync.prototype = {
 			if (vm.alive) {
 				if (dataLen <= elemLen) {
 					instance.slice(dataLen).each(function() {
-						var vmIndex = this.vmIndex
-						if (typeof vmIndex === 'number') {
-							$plus.viewModel[vmIndex] = null
+						var $this = $(this)
+						var vmindex = $this.attr('data-vmindex')
+						if (vmindex != null) {
+							$plus.viewModel[vmindex] = null
 						}
-					}).remove()
+						$this.find('[data-vmindex]').each(function() {
+							$plus.viewModel[$(this).attr('data-vmindex')] = null
+						})
+						$this.remove()
+					})
 					instance = vm.instance = instance.slice(0, dataLen)
 					instance.prevObject = null
 					for (i = 0; i < dataLen; i += 1) {

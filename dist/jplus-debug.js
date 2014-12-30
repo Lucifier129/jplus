@@ -801,11 +801,14 @@ $.fn.scanView = function(rescan) {
 		return {}
 	}
 	var elem = this[0]
-	var vmIndex = elem.vmIndex
-	if (typeof vmIndex === 'number' && !rescan) {
-		return $plus.viewModel[vmIndex].get()
+	var vmindex = this.attr('data-vmindex')
+	if (vmindex != null && !rescan) {
+		return $plus.viewModel[vmindex].get()
 	}
-	var vm = $plus.viewModel[elem.vmIndex || (elem.vmIndex = $plus.viewModel.length)] = new Scaner(this)
+	if (vmindex == null) {
+		this.attr('data-vmindex', vmindex = $plus.viewModel.length)
+	}
+	var vm = $plus.viewModel[vmindex] = new Scaner(this)
 	return vm.scan().get()
 }
 //refresh
@@ -878,11 +881,16 @@ Sync.prototype = {
 			if (vm.alive) {
 				if (dataLen <= elemLen) {
 					instance.slice(dataLen).each(function() {
-						var vmIndex = this.vmIndex
-						if (typeof vmIndex === 'number') {
-							$plus.viewModel[vmIndex] = null
+						var $this = $(this)
+						var vmindex = $this.attr('data-vmindex')
+						if (vmindex != null) {
+							$plus.viewModel[vmindex] = null
 						}
-					}).remove()
+						$this.find('[data-vmindex]').each(function() {
+							$plus.viewModel[$(this).attr('data-vmindex')] = null
+						})
+						$this.remove()
+					})
 					instance = vm.instance = instance.slice(0, dataLen)
 					instance.prevObject = null
 					for (i = 0; i < dataLen; i += 1) {
