@@ -3,28 +3,31 @@
  * @Author: Jade Gu
  * @Date: 2015.01.26
  */
-;(function($) {
+;
+(function($) {
 	'use strict';
 
 	function Store(name, callback) {
 		this.dbname = name
-		if (!localStorage[name]) {
+		var data = JSON.parse(localStorage[name])
+
+		if (!data) {
 			var data = {
 				todos: []
 			}
-
-			localStorage[name] = JSON.stringify(data)
-			callback.call(this, data)
-
-		} else {
-			callback.call(this, JSON.parse(localStorage[name]))
 		}
+		this.data = data
+		this.invoke(callback, data)
 	}
 
 	Store.prototype = {
 
+		saveLocalStorage: function() {
+			localStorage[this.dbname] = JSON.stringify(this.data)
+		},
+
 		checkId: function(id) {
-			return typeof id !== 'string'
+			return !id
 		},
 
 		checkValue: function(newValue) {
@@ -38,13 +41,12 @@
 		},
 
 		getData: function(callback) {
-			var data = JSON.parse(localStorage[this.dbname])
-			this.invoke(callback, data)
-			return data
+			this.invoke(callback, this.data)
+			return this.data
 		},
 
 		save: function(newData, callback) {
-			if (this.checkValue(newData) || this.checkId(id)) {
+			if (this.checkValue(newData)) {
 				return
 			}
 			var data = this.getData()
@@ -52,7 +54,12 @@
 			var todo
 
 			if (newData.id) {
-				todo = this.find(newData.id)
+				for (var i = todos.length - 1; i >= 0; i--) {
+					if (todos[i].id == newData.id) {
+						todo = todos[i]
+						break
+					}
+				}
 				if (todo) {
 					for (var key in newData) {
 						if (newData.hasOwnProperty(key)) {
@@ -63,27 +70,25 @@
 					todos.push(newData)
 					todo = newData
 				}
-
 			} else {
 				newData.id = new Date().getTime()
 				todos.push(newData)
 				todo = newData
 			}
-
 			this.invoke(callback, todo)
-			localStorage[this.dbname] = JSON.stringify(data)
 		},
 
 		find: function(id, callback) {
 			if (this.checkId(id)) {
-				return
+				return null
 			}
 			var data = this.getData()
 			var todos = data.todos
 			var todo
+
 			for (var i = todos.length - 1; i >= 0; i--) {
 				todo = todos[i]
-				if (todo.id === 'id') {
+				if (todo.id == id) {
 					this.invoke(callback, todo)
 					return todo
 				}
@@ -100,21 +105,24 @@
 			var todo
 			for (var i = todos.length - 1; i >= 0; i--) {
 				todo = todos[i]
-				if (todo.id === 'id') {
+				if (todo.id == id) {
 					todos.splice(i, 1)
 					this.invoke(callback, todo)
+					break
 				}
 			}
 		},
 
 		drop: function(callback) {
 			this.invoke(callback, this.getData())
-			localStorage[this.dbname] = JSON.stringify({todos: [])
-		}，
+			this.data = {
+				todos: []
+			}
+		},
 
 		replace: function(data, callback) {
 			this.invoke(callback, this.getData)
-			localStorage[this.dbname] = JSON.stringify(data)
+			this.data = data
 		}
 
 	}

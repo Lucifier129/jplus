@@ -21,32 +21,38 @@
 		},
 
 		getCompletedTodos: function() {
-			var todos = this.getTodos()
+			var todos = this.getAllTodos()
 			var result = todos.filter(function(todo) {
 				return todo.completed
 			})
+			return result
 		},
 
 		getActiveTodos: function() {
-			var todos = this.getTodos()
+			var todos = this.getAllTodos()
 			var result = todos.filter(function(todo) {
 				return !todo.completed
 			})
+			return result
 		},
 
 		getTodoById: function(id) {
 			return this.store.find(id)
 		},
 
-		saveTodo: function(newTodo) {
-			if ($.isPlainObject(newTodo)) {
-				this.store.save(newTodo)
+		saveTodo: function(todo) {
+			if ($.isPlainObject(todo)) {
+				this.store.save(todo)
 			}
 		},
 
 		removeTodoById: function(id) {
 			this.store.remove(id)
-		}
+		},
+
+		saveLocalStorage: function() {
+			this.store.saveLocalStorage()
+		},
 
 		init: function() {
 			this.store = new Store('jplus-todos')

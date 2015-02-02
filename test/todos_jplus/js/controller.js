@@ -10,76 +10,126 @@
 	var view = $.app.view
 	var controller = $.app.controller = {}
 
-	model.init()
 
-	$.each(view, function(_, viewModel) {
-		viewModel.init()
-	})
-
-
-	controller.route = {
-		'/': function() {
-			var allTodos = model.getAllTodos()
-			var completedTodos = model.getCompletedTodos()
-			var activeTodos = model.getActiveTodos()
-			view['todo-list'].refresh({
-				todos: allTodos
-			})
-			view['clear-completed'].refresh(completedTodos.length)
-			view['todo-count'].refresh(activeTodos.length)
-		},
-		'/active': function() {
-			var activeTodos = model.getActiveTodos()
+	controller.route = function(hash) {
+		var data = {
+			'/': model.getAllTodos(),
+			'/active': model.getActiveTodos(),
+			'/completed': model.getCompletedTodos()
+		}
+		view['todo-list'].refresh({
+			todos: data[hash]
+		})
+		view['clear-completed'].refresh(data['/completed'].length)
+		view['todo-count'].refresh(data['/active'].length)
+		$('#filters a').removeClass('selected')
+		$('#filters').find('[href="#' + hash + '"]').addClass('selected')
+		if (!data['/'].length) {
+			$('#footer').hide()
+		} else {
+			$('#footer').show()
 		}
 	}
 
-
-
 	controller.saveTodos = function() {
-		$('#todo-list li').each(function() {
-			var $elem = $(this)
-			model.saveTodo({
-				id: $elem.data('id'),
-				completed: $elem.hasClass('completed'),
-				title: $elem.text()
-			})
+		var todos = view['todo-list'].getTodos()
+		$.each(todos, function(i, todo) {
+			model.saveTodo(todo)
 		})
+	}
+
+	controller.update = function() {
+		var hash = '/' + location.hash.replace('#/', '')
+		this.route(hash)
 	}
 
 	controller.addEvent = function() {
 		var that = this
 
-		$(window).on('beforeunload', function() {
-			that.saveTodos()
-		})
+		$(window)
+			.on('beforeunload', function() {
+				model.saveLocalStorage()
+			})
+			.on('hashchange', function() {
+				that.update()
+			})
+			.on('load', function() {
+				that.update()
+				$('#newTodo').trigger('focus')
+			})
 
 
 		$(document)
 			.on('blur', '#new-todo', function() {
-				var val = this.value
-				if (val && val !== this.defaultValue) {
-					var newTodo = {
-						completed: false,
-						title: val
+				$(document).off('newTodo')
+			})
+			.on('focus', '#new-todo', function(e) {
+				$(document).on('keyup.newTodo', function(e) {
+					if (e.keyCode === 13) {
+						var todo = view['new-todo'].getNewTodo()
+						view['new-todo'].clear()
+						model.saveTodo(todo)
+						that.update()
 					}
-					view['todo-list'].add(newTodo)
-					model.saveTodo(newTodo)
-				}
+				})
 			})
-			.on('keyup', function(e) {
-				if (e.keyCode === 13) {
-					$('#new-todo').trigger('blur')
+			.on('change', '#toggle-all', (function() {
+				var status = 0
+				return function() {
+					var allTodos = model.getAllTodos()
+					$.each(allTodos, function(i, todo) {
+						todo.completed = !status
+					})
+					status = (status + 1) % 2
+					that.update()
 				}
-			})
-			.on('click', '#toggle-all', function() {
-				$('#todo-list li').toggleClass('completed')
-
+			})())
+			.on('change', '#todo-list li .toggle', function() {
+				var $item = $(this).closest('li')
+				$item.isCompleted(this.checked)
+				var todo = view['todo-list'].getTodo($item.get(0))
+				model.saveTodo(todo)
+				that.update()
 			})
 			.on('click', '#todo-list li .destroy', function() {
 				var $item = $(this).closest('li')
-				model.removeTodoById($item.data('id'))
-				$item.remove()
+				var id = $item.data('id')
+				model.removeTodoById(id)
+				that.update()
 			})
+			.on('click', '#clear-completed', function() {
+				var completedTodos = model.getCompletedTodos()
+				$.each(completedTodos, function() {
+					model.removeTodoById(this.id)
+				})
+				that.update()
+			})
+			.on('dblclick', '#todo-list li label', function() {
+				var $item = $(this).trigger('focus').closest('li')
+				view['todo-list'].startEdit($item)
+			})
+			.on('blur', '#todo-list li .edit', function() {
+				var $item = $(this).closest('li')
+				var todo = view['todo-list'].endEdit($item)
+				if (todo === '') {
+					var id = $item.data('id')
+					model.removeTodoById(id)
+					that.update()
+				} else if ($.isPlainObject(todo)) {
+					model.saveTodo(todo)
+					that.update()
+				}
+			})
+	}
+
+	controller.init = function() {
+		model.init()
+
+		$.each(view, function(_, viewModel) {
+			viewModel.init()
+		})
+
+		this.addEvent()
 	}
 
 }(window.jQuery))
