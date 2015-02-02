@@ -1,5 +1,5 @@
 /**
- * $.fn.refresh
+ * 添加工具性质的原型方法与静态方法：$.fn.refresh $.fn.render $.keys $.clone $.isEqual
  * @Author: yj_gu
  * @Date: 2015.01.26
  * @describe: 减少手动的dom选择，由祖先元素代理子孙元素的参数，也可作为模板引擎使用
@@ -45,25 +45,6 @@
 	var isStr = isType('String')
 	var isFn = isType('Function')
 	var isArr = Array.isArray || isType('Array')
-
-	var uid = 0
-
-	function getUid() {
-		return uid++
-	}
-
-	//获取元素id名，没有的话，生成一个格式固定的随机id
-	//@param {dom} dom元素
-	//@returns {id} 目标元素的id名
-	function getId(elem) {
-		if (!elem) {
-			return ''
-		}
-		if (!elem.id) {
-			elem.id = 'random_id' + getUid()
-		}
-		return '#' + elem.id
-	}
 
 	//@param {string} 形式如 "text:words;attr-src:url;"的字符串
 	//@returns {object} 将仿css属性写法的键值对，转化为javascript对象
@@ -187,11 +168,20 @@
 		}
 		var $this = this
 		var elem = this[0]
-		var id = getId(elem)
+		var id = elem.id
+		var randomId = false
+		if (!id) {
+			randomId = true
+			id = elem.id = 'refresh' + Math.random().toString(36).substr(2)
+		}
 		var directiveSet = {}
 		mergeDirectiveObj(directiveSet, $this.getDirective())
 
-		var $elems = $(id + ' [' + $plus.directiveName + ']')
+		var $elems = $('#' + id + ' [' + $plus.directiveName + ']')
+		if (randomId) {
+			$(elem).removeAttr('id')
+		}
+
 		$elems.each(function() {
 			mergeDirectiveObj(directiveSet, $(this).getDirective())
 		})
@@ -261,16 +251,15 @@
 				each(directiveItems, function(i, directiveItem) {
 					var $target = $(directiveItem.elem)
 					each(directiveItem.methodArr, function(_, methodname) {
-						callMethod($target, methodname, toArr(data[i]))
+						callMethod($target, methodname, data[i])
 					})
 				})
 
 			} else {
-				directiveItems.length = 1
 				each(directiveItems, function(_, directiveItem) {
 					var $target = $(directiveItem.elem)
 					each(directiveItem.methodArr, function(_, methodname) {
-						callMethod($target, methodname, toArr(data))
+						callMethod($target, methodname, data)
 					})
 				})
 			}

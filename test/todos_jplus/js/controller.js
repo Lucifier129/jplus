@@ -3,9 +3,8 @@
  * @Author: Jade
  * @Date: 2015.02.01
  */
-;
-(function($) {
-	$.app = $.app || {}
+;(function($) {
+
 	var model = $.app.model
 	var view = $.app.view
 	var controller = $.app.controller = {}
@@ -22,8 +21,8 @@
 		})
 		view['clear-completed'].refresh(data['/completed'].length)
 		view['todo-count'].refresh(data['/active'].length)
-		$('#filters a').removeClass('selected')
-		$('#filters').find('[href="#' + hash + '"]').addClass('selected')
+		$('#filters .selected').removeClass('selected')
+		$('#filters [href="#' + hash + '"]').addClass('selected')
 		if (!data['/'].length) {
 			$('#footer').hide()
 		} else {
@@ -86,8 +85,8 @@
 			})())
 			.on('change', '#todo-list li .toggle', function() {
 				var $item = $(this).closest('li')
-				$item.isCompleted(this.checked)
 				var todo = view['todo-list'].getTodo($item.get(0))
+				todo.completed = this.checked
 				model.saveTodo(todo)
 				that.update()
 			})
@@ -124,12 +123,7 @@
 
 	controller.init = function() {
 		model.init()
-
-		$.each(view, function(_, viewModel) {
-			viewModel.init()
-		})
-
 		this.addEvent()
 	}
 
-}(window.jQuery))
+}(window.jQuery));

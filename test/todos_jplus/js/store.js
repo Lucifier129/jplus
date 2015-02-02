@@ -9,12 +9,14 @@
 
 	function Store(name, callback) {
 		this.dbname = name
-		var data = JSON.parse(localStorage[name])
+		var data = localStorage[name]
 
 		if (!data) {
 			var data = {
 				todos: []
 			}
+		} else {
+			data = JSON.parse(data)
 		}
 		this.data = data
 		this.invoke(callback, data)

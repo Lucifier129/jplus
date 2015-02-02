@@ -21,7 +21,6 @@
 		</li>'
 
 	$.fn.isCompleted = function(completed) {
-		console.log(completed)
 		return this.each(function() {
 			var $this = $(this)
 			if (completed) {
@@ -32,7 +31,6 @@
 				$this.find('.toggle').removeAttr('checked')
 			}
 		})
-
 	}
 
 	view['todo-list'] = {
@@ -41,10 +39,15 @@
 
 		template: todo_item_template,
 
+		getElem: function() {
+			return $('#' + this.id)
+		},
+
 		getTodos: function() {
 			var that = this
 			var result = []
-			this.$elem.find('li').each(function() {
+			var $elem = this.getElem()
+			$elem.find('li').each(function() {
 				var todo = that.getTodo(this)
 				result.push(todo)
 			})
@@ -52,9 +55,10 @@
 		},
 
 		getTodo: function(index) {
+			var $elem = this.getElem()
 			var $target
 			if (typeof index === 'number') {
-				$target = this.$elem.find('eq(' + index + ')')
+				$target = $elem.find('eq(' + index + ')')
 			} else if (index.nodeName) {
 				$target = $(index)
 			}
@@ -67,35 +71,38 @@
 		},
 
 		getCompleted: function() {
-			return this.$elem.find('.completed')
+			return this.getElem().find('.completed')
 		},
 
 		getActive: function() {
-			return this.$elem.find('li').filter(function() {
+			return this.getElem().find('li').filter(function() {
 				return !$(this).hasClass('completed')
 			})
 		},
 
 		getAll: function() {
-			return this.$elem.children()
+			return this.getElem().children()
 		},
 
 		refresh: function(data) {
+			var $elem = this.getElem()
 			if ($.isPlainObject(data)) {
 				this.data = data
 			} else {
 				data = this.data
 			}
-			if (!this.$elem.children().length) {
-				this.$elem.html(this.template)
+			if (!$elem.children().length) {
+				$elem.html(this.template)
 			}
-			this.$elem.refresh(data)
+			$elem.refresh(data)
 		},
 
 		startEdit: function($item) {
 			var title = $item.find('label').text()
-			$item.find('.edit').val(title)
+			var input = $item.find('.edit').get(0)
+			input.value = title
 			$item.addClass('editing')
+			input.focus()
 		},
 
 		endEdit: function($item) {
@@ -112,10 +119,6 @@
 				$label.text(val)
 				return this.getTodo($item.get(0))
 			}
-		},
-
-		init: function() {
-			this.$elem = $('#' + this.id)
 		}
 	}
 
@@ -123,24 +126,23 @@
 
 		id: 'todo-count',
 
+		getElem: function() {
+			return $('#' + this.id)
+		},
+
 		refresh: function(count) {
 			if (typeof count !== 'number') {
 				return this
 			}
-
+			var $elem = this.getElem()
 			if (count > 0) {
 				var text = count + ' item left'
-				this.$elem.text(text)
+				$elem.text(text)
 			} else if (count === 0) {
-				this.$elem.empty()
+				$elem.empty()
 			}
 
 			return this
-		},
-
-		init: function(count) {
-			this.$elem = $('#' + this.id)
-			this.refresh(count)
 		}
 	}
 
@@ -148,32 +150,36 @@
 
 		id: 'clear-completed',
 
+		getElem: function() {
+			return $('#' + this.id)
+		},
+
 		refresh: function(count) {
 			if (typeof count !== 'number') {
 				return this
 			}
-
+			var $elem = this.getElem()
 			if (count > 0) {
 				var text = 'Clear completed (' + count + ')'
-				this.$elem.text(text)
+				$elem.text(text)
 			} else if (count === 0) {
-				this.$elem.empty()
+				$elem.empty()
 			}
 
 			return this
-		},
-
-		init: function(count) {
-			this.$elem = $('#' + this.id)
-			this.$elem.refresh(count)
 		}
 	}
 
 	view['new-todo'] = {
 		id: 'new-todo',
 
+		getElem: function() {
+			return document.getElementById(this.id)
+		},
+
 		getNewTodo: function() {
-			var val = this.elem.value
+			var elem = this.getElem()
+			var val = elem.value
 			val = $.trim(val)
 			if (val && val !== this.defaultValue) {
 				var todo = {
@@ -186,11 +192,7 @@
 		},
 
 		clear: function() {
-			this.elem.value = ''
-		},
-
-		init: function() {
-			this.elem = $('#' + this.id)[0]
+			this.getElem.value = ''
 		}
 	}
 

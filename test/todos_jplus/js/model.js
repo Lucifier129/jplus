@@ -5,10 +5,9 @@
 */
 ;(function ($) {
 
-	$.app = $.app || {}
-
-
 	var Store = $.Store
+
+	$.app = $.app || {}
 
 	$.app.model = {
 
