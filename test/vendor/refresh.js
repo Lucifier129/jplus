@@ -165,8 +165,9 @@
 
 	//扫描元素，并收集指令，如js="text:words"
 	$proto.scan = function() {
+		var directiveSet = {}
 		if (!this.length) {
-			return this
+			return directiveSet
 		}
 		var $this = this
 		var elem = this[0]
@@ -176,7 +177,6 @@
 			randomId = true
 			id = elem.id = 'refresh' + Math.random().toString(36).substr(2)
 		}
-		var directiveSet = {}
 		mergeDirectiveObj(directiveSet, $this.getDirective())
 
 		var $elems = $('#' + id + ' [' + $plus.directiveName + ']')

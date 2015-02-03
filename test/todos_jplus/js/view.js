@@ -11,7 +11,7 @@
 	var view = $.app.view = {}
 
 	var todo_item_template =
-		'<li js="refresh:todos;data-id:id;isCompleted:completed;" noscan>\
+		'<li js="refresh:todos;setTodoId:id;isCompleted:completed;" noscan>\
 			<div class="view">\
 				<input class="toggle" type="checkbox">\
 				<label js="text:title"></label>\
@@ -31,6 +31,10 @@
 				$this.find('.toggle').removeAttr('checked')
 			}
 		})
+	}
+
+	$.fn.setTodoId = function(id) {
+		this.attr('data-id', id)
 	}
 
 	view['todo-list'] = {
@@ -63,7 +67,7 @@
 				$target = $(index)
 			}
 			var result = {
-				id: $target.data('id'),
+				id: $target.attr('data-id'),
 				completed: $target.hasClass('completed'),
 				title: $target.find('label').text()
 			}
@@ -95,6 +99,42 @@
 				$elem.html(this.template)
 			}
 			$elem.refresh(data)
+		},
+
+		refreshItem: function(data) {
+			if (!$.isPlainObject(data)) {
+				return
+			}
+			var $target = this.getElem().find('[data-id="' + data.id + '"]')
+			$target.refresh({
+				title: data.title,
+				completed: data.completed
+			})
+		},
+
+		addItem: function(data) {
+			if (!$.isPlainObject(data)) {
+				return
+			}
+			var $target = this.getElem().find('[data-id="' + data.id + '"]')
+			console.log($target.length)
+			if ($target.length) {
+				$target.refresh({
+					title: data.title,
+					completed: data.completed
+				})
+			} else {
+				$target = $(this.template)
+				$target.appendTo(this.getElem())
+				$target.refresh(data)
+			}
+		},
+
+		removeItem: function(id) {
+			if (!id) {
+				return
+			}
+			this.getElem().find('[data-id="' + id + '"]').remove()
 		},
 
 		startEdit: function($item) {
@@ -192,7 +232,7 @@
 		},
 
 		clear: function() {
-			this.getElem.value = ''
+			this.getElem().value = ''
 		}
 	}
 

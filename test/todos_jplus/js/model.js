@@ -54,7 +54,7 @@
 		},
 
 		init: function() {
-			this.store = new Store('jplus-todos')
+			this.store = new Store('todos-jplus')
 		}
 	}
 
