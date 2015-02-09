@@ -10,32 +10,40 @@ var fs = require('fs')
 //获取当前路径，方便读写目录跟文件
 var cwd = process.cwd()
 
-var part1 ='http://baoxian.taobao.com/json/PurchaseList.do?spm=0.0.0.0.7xctOa&page='
-var part2 = '&&itemId=42426683935&sellerId=352262586&callback=callbackres'
-/*var part1 = 'http://baoxian.taobao.com/json/PurchaseList.do?page='
-var part2 = '&itemId=40402620440&sellerId=352262586&callback=mycallback&sold_total_num=0&callback=mycallback'*/
+var part1 = 'http://baoxian.taobao.com/json/PurchaseList.do?spm=0.0.0.0.t8I2d2&page='
+var part2 = '&&itemId=18793807024&sellerId=366268061&callback=callbackres'
 
 var TIME_RE = /\d{4}\-\d{2}\-\d{2}\s\d{2}\:\d{2}:\d{2}/g
 var AMOUNT_RE = /<td>[(\\r)(\\n)(\\t)(\s)]*\d+[(\\r)(\\n)(\\t)(\s)]*<\\\/td>/g
+var PRICE_RE = /<em>\d+\.\d+<\\\/em>/g
 var result = []
-var count = 2400
+var count = 0
 var errCount = 0
+var fileCount = 1
 function getJSON(url) {
 	superagent
 		.get(url)
 		.end(function(res) {
-			if (!res.ok || !count) {
-				fs.writeFile(path.join(cwd, 'times2.txt'), result.join('\n'), function(err) {
-					console.log(err || 'done')
-				})
+			if (!res.ok) {
 				return
 			}
+
+			if ((!(count % 500)) && result.length) {
+				console.log(fileCount)
+				fs.writeFile(path.join(cwd, 'dadi', 'data' + fileCount++ + '.txt'), result.join('\n'), function(err) {
+					console.log(err || 'done')
+				})
+				if (count) {
+					result = []
+				}
+			}
 			try {
-				var amounts = res.text.match(AMOUNT_RE)
 				var times = res.text.match(TIME_RE)
+				var prices = res.text.match(PRICE_RE)
 				var combo = []
-				amounts.forEach(function(amount, i) {
-					combo.push([amount.match(/\d+/)[0], times[i]].join())
+				console.log(times, prices)
+				times.forEach(function(time, i) {
+					combo.push([time, prices[i].match(/\d+\.\d+/)].join())
 				})
 				Array.prototype.push.apply(result, combo)
 			} catch (e) {
@@ -43,11 +51,16 @@ function getJSON(url) {
 			}
 			
 			console.log(url)
-			getJSON(part1 + (--count) + part2)
+			if (count > 0) {
+				getJSON(part1 + (++count) + part2)
+			}
 		})
 }
 
-getJSON(part1 + count + part2)
-
+for (var i =0; i < 20; i += 1) {
+	getJSON(part1 + (++count) + part2)
+}
+/*
+getJSON(part1 + count+ part2)*/
 
 console.log('start')
