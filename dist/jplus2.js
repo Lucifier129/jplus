@@ -479,18 +479,19 @@
 		})
 	}
 
+	//备用的指令名称
 	$.directive = {
-		getter: 'data-get',
-		setter: 'data-set'
+		getter: 'data-bind',
+		setter: 'data-bind'
 	}
 
 
 	//扫描视图模型并更新视图数据
-	$.fn.refresh = function(dataModel) {
-		if (this.length !== 1) {
+	$.fn.refresh = function(dataModel, directiveName) {
+		if (this.length !== 1 || !isObj(dataModel)) {
 			return this
 		}
-		var viewModel = $.fn.scan.call(this, $.directive.setter)
+		var viewModel = $.fn.scan.call(this, directiveName || $.directive.setter)
 		new Sync(viewModel, dataModel).done()
 		return this
 	}
@@ -515,7 +516,7 @@
 		var view = viewModel.view
 		var $scope = viewModel.$scope
 		var result = []
-		each(itemList, function(i, item) {
+		each(itemList, function(_, item) {
 			var $elem = item.$elem
 			var propName = item.propList[0]
 			propName = propName.split('-')
@@ -531,12 +532,7 @@
 				if (isFn(prop)) {
 					ret = prop.apply(elem, part2)
 				} else {
-					var globalProp = new Get(window, part1).done()
-					if (isFn(globalProp)) {
-						ret = globalProp.apply(window, part2)
-					} else {
-						ret = prop
-					}
+					ret = prop
 				}
 			}
 			result.push(ret)
@@ -544,9 +540,19 @@
 		return result.length > 1 ? result : result[0]
 	}
 
-
-	$.fn.collect = function(directiveName) {
+	//收集视图中的数据，根据source指定要收集的数据及其数据结构
+	$.fn.collect = function(source, directiveName) {
 		var viewModel = $.fn.scan.call(this, directiveName || $.directive.getter)
+		if (isObj(source)) {
+			var oldView = viewModel.view
+			var newView = {}
+			each(source, function(oldPropChain, newPropChian) {
+				if (hasOwn(oldView, oldPropChain)) {
+					newView[newPropChian] = oldView[oldPropChain]
+				}
+			})
+			viewModel.view = newView
+		}
 		return new Extract(viewModel).done()
 	}
 
