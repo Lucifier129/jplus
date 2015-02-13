@@ -56,8 +56,21 @@
 	var isNum = isType('Number')
 	var isArr = Array.isArray || isType('Array')
 
-	var each = $.each
-	var extend = $.extend
+	//简洁实现，为性能计
+	var each = function(obj, callback) {
+		if (isArr(obj)) {
+			for (var i = 0, len = obj.length; i < len; i += 1) {
+				callback(i, obj[i])
+			}
+		} else if (isObj(obj)) {
+			for (var key in obj) {
+				if (hasOwn(obj, key)) {
+					callback(key, obj[key])
+				}
+			}
+		}
+		return obj
+	}
 
 	//「面向过程对象」：函数是代码片段，包含一个特定过程，它也可以被视为一种对象
 	//将函数参数保存在对象的属性中，将函数体放在done方法中
@@ -108,14 +121,14 @@
 				prop = props[i]
 				callback(result, prop, i)
 				result = result[prop]
-				if (result == null) {
+				if (result === undefined) {
 					break
 				}
 			}
 		} else {
 			for (var i = 0, len = props.length; i < len; i += 1) {
 				result = result[props[i]]
-				if (result == null) {
+				if (result === undefined) {
 					break
 				}
 			}
@@ -209,7 +222,7 @@
 	//@param {array} 数组
 	//@returns {boolean} 布尔值
 	function isSimilar(arr) {
-		if (!isArr(arr) || !arr.length) {
+		if (!isArr(arr)) {
 			return false
 		}
 		var len = arr.length
@@ -257,6 +270,11 @@
 		return ret
 	}
 
+	function DirectiveItem($elem, propList) {
+		this.$elem = $elem
+		this.propList = propList
+	}
+
 	//组织元素与指令为特定结构
 	function Combine() {
 		this.view = {}
@@ -269,10 +287,7 @@
 			if (!isArr($item)) {
 				$item = view[propChain] = []
 			}
-			$item.push({
-				$elem: $elem,
-				propList: propList
-			})
+			$item.push(new DirectiveItem($elem, propList))
 		})
 	}
 
@@ -298,6 +313,8 @@
 		var $scope = this.$scope
 		var id = $scope.attr('id')
 		var randomId
+
+		//Zepto的$.fn.find实现与jQuery不同；构造id + selector
 		if (!id) {
 			randomId = 'random-id-' + Math.random().toString(36).substr(2)
 			$scope.attr('id', id = randomId)
@@ -306,9 +323,14 @@
 		var prefix = '#' + id + ' '
 		var selector = '[' + directiveName + ']'
 		var filter = '[noscan] ' + selector
-		var $elems = $(prefix + selector).not(prefix + filter)
+		var $elems = $(prefix + selector)
+		var $noScanElems = $(prefix + filter)
+		if ($noScanElems.length) {
+			//Zepto的$.fn.not方法，对选择器的处理性能奇差；用$()包装起来，效果更优
+			$elems = $elems.not($noScanElems)
+		}
 		var combine = new Combine()
-		new Collect(combine, $scope, directiveName).done()
+		/*new Collect(combine, $scope, directiveName).done()*/
 		$elems.each(function() {
 			new Collect(combine, $(this), directiveName).done()
 		})
@@ -342,13 +364,19 @@
 		var hasCallback = isFn(callback)
 		var elem = this.elem
 		var copy
-		for (var i = amount - 1; i >= 0; i--) {
-			copy = elem.cloneNode(true)
-			frag.appendChild(copy)
-			if (hasCallback) {
+		if (isFn(callback)) {
+			for (var i = amount - 1; i >= 0; i--) {
+				copy = elem.cloneNode(true)
+				frag.appendChild(copy)
 				callback(copy)
 			}
+		} else {
+			for (var i = amount - 1; i >= 0; i--) {
+				copy = elem.cloneNode(true)
+				frag.appendChild(copy)
+			}
 		}
+
 		this.copies = frag
 		return this
 	}
@@ -395,7 +423,7 @@
 		var $scope = this.viewModel.$scope
 		each(this.viewModel.view, function(propChain, directiveList) {
 			var data = new Get(dataModel, propChain).done()
-			if (data) {
+			if (data !== undefined) {
 				new Match($scope, directiveList, data).done()
 			}
 		})
@@ -414,21 +442,14 @@
 		var data = this.data
 
 		if (isSimilar(data)) {
-			var $firstElem = directiveList[0].$elem
-
-			if ($firstElem.attr('norepeat') == undefined) {
+			if (directiveList[0].$elem.attr('norepeat') == undefined) {
 				var dataLen = data.length
 				var listLen = directiveList.length
-				var elemGene
 				if (dataLen > listLen) {
-					var elem = $firstElem[0]
 					var propList = directiveList[0].propList
-					elemGene = new ElemGene(elem)
+					var elemGene = new ElemGene(directiveList[listLen - 1].$elem[0])
 					elemGene.clone(dataLen - listLen, function(copy) {
-						directiveList.push({
-							$elem: $(copy),
-							propList: propList
-						})
+						directiveList.push(new DirectiveItem($(copy), propList))
 					})
 					elemGene.insert()
 				} else if (dataLen < listLen) {
@@ -448,7 +469,6 @@
 				new Assign($scope, view, data).done()
 			})
 		}
-
 	}
 
 	//根据view的propList，分派data的处理方式
@@ -470,12 +490,22 @@
 			var part1 = propName[0]
 			var part2 = propName.slice(1)
 			var prop = new Get($scope, part1).done()
+
+			//先查$scope及其原型链，注：$.fn为其原型之一
 			if (isFn(prop)) {
 				prop.apply($elem, part2.concat(data))
 			} else {
-				new Set(elem, part1, data).done()
-			}
 
+				//再查原生elem的原型链
+				prop = new Get(elem, part1).done()
+				if (isFn(prop)) {
+					prop.apply(elem, part2.concat(data))
+				} else {
+
+					//全部都不是的时候，当做设置属性处理
+					new Set(elem, part1, data).done()
+				}
+			}
 		})
 	}
 
@@ -506,7 +536,9 @@
 		var result = {}
 		each(this.viewModel.view, function(propChain, itemList) {
 			var data = that.get(itemList)
-			new Set(result, propChain, data).done()
+			if (data !== undefined) {
+				new Set(result, propChain, data).done()
+			}
 		})
 		return result
 	}
@@ -526,6 +558,9 @@
 			var ret
 			if (isFn(prop)) {
 				ret = prop.apply($elem, part2)
+
+				//不收集返回的this值
+				ret = ret !== $elem ? ret : undefined
 			} else {
 				var elem = $elem[0]
 				prop = new Get(elem, part1).done()
@@ -535,7 +570,11 @@
 					ret = prop
 				}
 			}
-			result.push(ret)
+
+			//不收集undefined
+			if (ret !== undefined) {
+				result.push(ret)
+			}
 		})
 		return result.length > 1 ? result : result[0]
 	}
@@ -554,6 +593,11 @@
 			viewModel.view = newView
 		}
 		return new Extract(viewModel).done()
+	}
+
+	//refresh + collect => view
+	$.fn.view = function(dataModel) {
+		return isObj(dataModel) ? this.refresh(dataModel) : this.collect()
 	}
 
 	$.Get = Get

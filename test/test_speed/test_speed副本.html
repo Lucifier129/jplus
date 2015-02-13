@@ -16,7 +16,7 @@
     <body>
         <span style="color:#f00"></span>
         <table align="center" border="0">
-            <tr data-bind="refresh: numList">
+            <tr data-bind="view: numList">
                 <td data-bind="text: num"></td>
             </tr>
         </table>
@@ -32,16 +32,18 @@
 
         var numList = []
         var num
-        for (var i = 0; i < 200; i++) {
-            num = new Array(100).join(i + ',').split(',')
-            num.forEach(function(value, index, array) {
-                array[index] = i + index
+        for (var i = 0; i < 5000; i++) {
+            num = new Array(100)
+            $.each(num, function(index, value) {
+                num[index] = i + index
             })
+            /*num.forEach(function(value, index, array) {
+                array[index] = i + index
+            })*/
             numList[i] = {
                 num: num
             }
         }
-
        $('table').refresh({numList: numList})
 
     $('span').text(+new Date() - start)

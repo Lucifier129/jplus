@@ -31,7 +31,7 @@
 <script type="text/javascript" src="../../dist/jplus2.js"></script>
 <script type="text/javascript">
 $(function() {
-    var $container = $('#container')
+    var $body = $('body')
     var source = {
         header: '测试zepto',
         words: '测试普通取值',
@@ -49,7 +49,7 @@ $(function() {
         }
     }
 
-    $container.view = {
+    $body.view = {
         text: function(words) {
             if (words) {
                 this.text(words + '-测试点操作符链式取用方法，链式取用参数')
@@ -60,10 +60,10 @@ $(function() {
     }
 
 
-    $container.refresh(source)
+    $body.refresh(source)
     $('#noscan').refresh(source)
     //测试获取数据
-    console.log($container.collect())
+    console.log($body.collect())
     //测试获取指定数据并转换结构
     console.log($('#noscan').collect({
         'noscan.text': 'text'
