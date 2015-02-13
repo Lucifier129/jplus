@@ -304,9 +304,10 @@
 	}
 
 	//根据特定指令名与作用域，扫描出特定结构的viewModel对象
-	function Scan($scope, directiveName) {
+	function Scan($scope, directiveName, includeScope) {
 		this.$scope = $scope
 		this.directiveName = directiveName
+		this.includeScope = includeScope
 	}
 
 	Scan.prototype.done = function() {
@@ -330,7 +331,9 @@
 			$elems = $elems.not($noScanElems)
 		}
 		var combine = new Combine()
-		/*new Collect(combine, $scope, directiveName).done()*/
+		if (this.includeScope) {
+			new Collect(combine, $scope, directiveName).done()
+		}
 		$elems.each(function() {
 			new Collect(combine, $(this), directiveName).done()
 		})
@@ -344,9 +347,9 @@
 	}
 
 	//扫描视图，获取viewModel
-	$.fn.scan = function(directiveName) {
+	$.fn.scan = function(directiveName, includeScope) {
 		directiveName = directiveName || $.directive.setter
-		var viewModel = new Scan(this, directiveName).done()
+		var viewModel = new Scan(this, directiveName, includeScope).done()
 		return viewModel
 	}
 
@@ -521,7 +524,9 @@
 		if (this.length !== 1 || !isObj(dataModel)) {
 			return this
 		}
-		var viewModel = $.fn.scan.call(this, directiveName || $.directive.setter)
+
+		//刷新视图时，扫描自身的指令；获取视图数据时，不扫描
+		var viewModel = $.fn.scan.call(this, directiveName || $.directive.setter, true)
 		new Sync(viewModel, dataModel).done()
 		return this
 	}
@@ -581,7 +586,7 @@
 
 	//收集视图中的数据，根据source指定要收集的数据及其数据结构
 	$.fn.collect = function(source, directiveName) {
-		var viewModel = $.fn.scan.call(this, directiveName || $.directive.getter)
+		var viewModel = $.fn.scan.call(this, directiveName || $.directive.getter, false)
 		if (isObj(source)) {
 			var oldView = viewModel.view
 			var newView = {}
