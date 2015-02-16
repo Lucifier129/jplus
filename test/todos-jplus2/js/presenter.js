@@ -16,10 +16,7 @@ $.app = $.app || {};
 
 	Presenter.prototype.init = function() {
 		this.model = new this.Model('todos-jplus2')
-		this.$scope = $('#todoapp')
-		$.extend(this.$scope, {
-			directive: this.View
-		})
+		this.$scope = $(this.View)
 		this.listen()
 		return this
 	}
@@ -77,11 +74,12 @@ $.app = $.app || {};
 			var val = input.value
 			if (!val) {
 				that.model.removeTodo(id)
-				console.log(id)
 				that.update()
 			} else if (val !== $label.text()) {
 				var todo = that.model.getTodo(id)
+				todo.time = new Date().toLocaleString()
 				$label.text(todo.title = val)
+				$li.attr('title', todo.time)
 			}
 			$li.removeClass('editing')
 		}

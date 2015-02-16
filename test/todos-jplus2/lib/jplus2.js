@@ -600,7 +600,7 @@
 	}
 
 	//refresh + collect => view
-	$.fn.view = function(dataModel) {
+	$.fn.vm = function(dataModel) {
 		return isObj(dataModel) ? this.refresh(dataModel) : this.collect()
 	}
 

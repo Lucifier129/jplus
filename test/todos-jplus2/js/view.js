@@ -4,7 +4,7 @@
 (function($) {
 
 	var todoTemplate =
-	'<li data-bind="view:todos;addId:id;attr-title:time;checkStatus:completed">\
+	'<li data-bind="vm:todos;addId:id;attr-title:time;checkStatus:completed">\
 		<div class="view">\
 			<input class="toggle" type="checkbox" data-bind="checkCompleted:completed">\
 				<label data-bind="text:title;"></label>\
