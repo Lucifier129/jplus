@@ -3,8 +3,13 @@
  */
 ! function($, undefined) {
 
-	if (!Array.prototype.indexOf) {
-		Array.prototype.indexOf = function(value) {
+	//base
+	var objProto = Object.prototype
+	var arrProto = Array.prototype
+	var call = Function.prototype.call
+
+	if (!arrProto.indexOf) {
+		arrProto.indexOf = function(value) {
 			for (var i = this.length - 1; i >= 0; i--) {
 				if (this[i] === value) {
 					return i
@@ -21,10 +26,6 @@
 		}
 	}
 
-	//base
-	var objProto = Object.prototype
-	var call = Function.prototype.call
-
 	//反柯里化
 	//接受一个函数
 	//返回一个函数：1）首个参数作为原函数的this；2）其余参数传入原函数
@@ -36,7 +37,7 @@
 
 	var toStr = calling(objProto.toString)
 	var hasOwn = calling(objProto.hasOwnProperty)
-	var slice = calling(Array.prototype.slice)
+	var slice = calling(arrProto.slice)
 
 	//返回一个检测输入的obj是否符合特定数据类型的函数
 	function isType(type) {
@@ -57,15 +58,23 @@
 	var isArr = Array.isArray || isType('Array')
 
 	//简洁实现，为性能计
-	var each = function(obj, callback) {
+	var each = Object.keys && arrProto.forEach ? function(obj, callback) {
+		if (isArr(obj)) {
+			obj.forEach(callback)
+		} else if (isObj(obj)) {
+			Object.keys(obj).forEach(function(key) {
+				callback(obj[key], key)
+			})
+		}
+	} : function(obj, callback) {
 		if (isArr(obj)) {
 			for (var i = 0, len = obj.length; i < len; i += 1) {
-				callback(i, obj[i])
+				callback(obj[i], i)
 			}
 		} else if (isObj(obj)) {
 			for (var key in obj) {
 				if (hasOwn(obj, key)) {
-					callback(key, obj[key])
+					callback(obj[key], key)
 				}
 			}
 		}
@@ -116,7 +125,6 @@
 		var props = new ParseChain(this.propChain, this.separator).done()
 		var prop
 		if (isFn(callback)) {
-			var count = 0
 			for (var i = 0, len = props.length; i < len; i += 1) {
 				prop = props[i]
 				callback(result, prop, i)
@@ -151,7 +159,7 @@
 		var val = this.val
 
 		if (isObj(propChain)) {
-			each(propChain, function(chain, value) {
+			each(propChain, function(value, chain) {
 				new Set(obj, chain, value).done()
 			})
 			return obj
@@ -193,7 +201,7 @@
 		var args = this.args
 
 		if (isObj(propChain)) {
-			each(propChain, function(chain, args) {
+			each(propChain, function(args, chain) {
 				new Call(obj, chain, args).done()
 			})
 			return
@@ -251,7 +259,7 @@
 			return ret
 		}
 		var group = describe.trim().split(';')
-		each(group, function(i, value) {
+		each(group, function(value, i) {
 			value = value.trim().split(':')
 			if (value.length < 2) {
 				return
@@ -282,7 +290,7 @@
 
 	Combine.prototype.done = function($elem, $directive) {
 		var view = this.view
-		each($directive, function(propChain, propList) {
+		each($directive, function(propList, propChain) {
 			var $item = view[propChain]
 			if (!isArr($item)) {
 				$item = view[propChain] = []
@@ -364,14 +372,13 @@
 			return this
 		}
 		var frag = document.createDocumentFragment()
-		var hasCallback = isFn(callback)
 		var elem = this.elem
 		var copy
 		if (isFn(callback)) {
 			for (var i = amount - 1; i >= 0; i--) {
 				copy = elem.cloneNode(true)
 				frag.appendChild(copy)
-				callback(copy)
+				callback(copy, i)
 			}
 		} else {
 			for (var i = amount - 1; i >= 0; i--) {
@@ -397,6 +404,7 @@
 		} else {
 			parent.appendChild(this.copies)
 		}
+		this.copies = null
 		return
 	}
 
@@ -413,6 +421,7 @@
 	//动手销毁
 	Destory.prototype.done = function() {
 		this.frag.innerHTML = ''
+		this.frag = null
 	}
 
 	//根据viewModel，将dataModel同步到视图中
@@ -423,8 +432,9 @@
 
 	Sync.prototype.done = function() {
 		var dataModel = this.dataModel
-		var $scope = this.viewModel.$scope
-		each(this.viewModel.view, function(propChain, directiveList) {
+		var viewModel = this.viewModel
+		var $scope = viewModel.$scope
+		each(viewModel.view, function(directiveList, propChain) {
 			var data = new Get(dataModel, propChain).done()
 			if (data !== undefined) {
 				new Match($scope, directiveList, data).done()
@@ -460,15 +470,15 @@
 					for (var i = listLen - 1; i >= dataLen; i--) {
 						destory.collect(directiveList[i].$elem[0])
 					}
-					destory.done()
 					directiveList.length = dataLen
+					destory.done()
 				}
 			}
-			each(directiveList, function(i, view) {
+			each(directiveList, function(view, i) {
 				new Assign($scope, view, data[i]).done()
 			})
 		} else {
-			each(directiveList, function(_, view) {
+			each(directiveList, function(view) {
 				new Assign($scope, view, data).done()
 			})
 		}
@@ -488,7 +498,7 @@
 		var $elem = view.$elem
 		var elem = $elem[0]
 		var propList = view.propList
-		each(propList, function(_, propName) {
+		each(propList, function(propName) {
 			propName = propName.split('-')
 			var part1 = propName[0]
 			var part2 = propName.slice(1)
@@ -539,7 +549,7 @@
 	Extract.prototype.done = function() {
 		var that = this
 		var result = {}
-		each(this.viewModel.view, function(propChain, itemList) {
+		each(this.viewModel.view, function(itemList, propChain) {
 			var data = that.get(itemList)
 			if (data !== undefined) {
 				new Set(result, propChain, data).done()
@@ -553,7 +563,7 @@
 		var view = viewModel.view
 		var $scope = viewModel.$scope
 		var result = []
-		each(itemList, function(_, item) {
+		each(itemList, function(item) {
 			var $elem = item.$elem
 			var propName = item.propList[0]
 			propName = propName.split('-')
@@ -590,7 +600,7 @@
 		if (isObj(source)) {
 			var oldView = viewModel.view
 			var newView = {}
-			each(source, function(oldPropChain, newPropChian) {
+			each(source, function(newPropChian, oldPropChain) {
 				if (hasOwn(oldView, oldPropChain)) {
 					newView[newPropChian] = oldView[oldPropChain]
 				}
@@ -600,7 +610,7 @@
 		return new Extract(viewModel).done()
 	}
 
-	//refresh + collect => view
+	//refresh + collect => vm
 	$.fn.vm = function(dataModel) {
 		return isObj(dataModel) ? this.refresh(dataModel) : this.collect()
 	}
