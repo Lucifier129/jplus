@@ -57,14 +57,8 @@ $.app = $.app || {};
 	Presenter.prototype.listen = function() {
 		var that = this
 
-		function newTodo(value) {
-			var data = new Date()
-			that.model.addTodo({
-				id: data.getTime(),
-				time: data.toLocaleString(),
-				completed: false,
-				title: value
-			})
+		function newTodo(title) {
+			that.model.addTodo(title)
 			that.update()
 		}
 

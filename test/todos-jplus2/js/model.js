@@ -46,8 +46,14 @@ $.app = $.app || {};
 				value: true
 			})
 		},
-		addTodo: function(todo) {
-			this.todos.push(todo)
+		addTodo: function(title) {
+			var data = new Date()
+			this.todos.push({
+				id: data.getTime(),
+				time: data.toLocaleString(),
+				completed: false,
+				title: title
+			})
 		},
 		removeTodo: function(id) {
 			var todo = this.getTodo(id)
