@@ -6,19 +6,14 @@ $.app = $.app || {};
 (function(app) {
 
 	function Model(name) {
+		var item = localStorage.getItem(name)
+		this.todos = item ? JSON.parse(item) : []
 		this.name = name
-		this.todos = localStorage.getItem(name)
-		if (this.todos) {
-			this.todos = JSON.parse(this.todos)
-		} else {
-			this.todos = []
-		}
 	}
 
 	Model.prototype = {
 		$find: function(query) {
 			var result = []
-			var todo
 			this.todos.forEach(function(todo) {
 				if (todo[query.name] == query.value) {
 					result.push(todo)
@@ -27,10 +22,14 @@ $.app = $.app || {};
 			return result
 		},
 		getTodo: function(id) {
-			return this.$find({
-				name: 'id',
-				value: id
-			})[0]
+			var todos = this.todos
+			var todo
+			for (var i = todos.length - 1; i >= 0; i--) {
+				todo = todos[i]
+				if (todo.id == id) {
+					return todo
+				}
+			}
 		},
 		getAll: function() {
 			return this.todos

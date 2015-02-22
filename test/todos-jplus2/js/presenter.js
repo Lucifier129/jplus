@@ -16,7 +16,8 @@ $.app = $.app || {};
 
 	Presenter.prototype.init = function() {
 		this.model = new this.Model('todos-jplus2')
-		this.$scope = $(this.View)
+		$.extend($.fn, this.View)
+		this.$scope = $('#todoapp')
 		this.listen()
 		return this
 	}
@@ -44,7 +45,7 @@ $.app = $.app || {};
 			actLen: data['/active'].length,
 			comLen: data['/completed'].length
 		}
-		model.allCompleted = model.comLen === model.list.todos.length && model.comLen
+		model.allCompleted = model.comLen && model.comLen === data['/'].length
 		this.$scope.refresh(model)
 	}
 
@@ -77,9 +78,9 @@ $.app = $.app || {};
 				that.update()
 			} else if (val !== $label.text()) {
 				var todo = that.model.getTodo(id)
-				todo.time = new Date().toLocaleString()
+				var time = new Date().toLocaleString()
 				$label.text(todo.title = val)
-				$li.attr('title', todo.time)
+				$li.attr('title', todo.time = time)
 			}
 			$li.removeClass('editing')
 		}
@@ -132,8 +133,7 @@ $.app = $.app || {};
 			.on('dblclick', '#todo-list label', function() {
 				var $this = $(this)
 				var $li = $this.closest('li').addClass('editing')
-				var $edit = $li.find('.edit').val($this.text())
-				$edit[0].focus()
+				$li.find('.edit').val($this.text())[0].focus()
 			})
 			.on('change', '#todo-list .edit', function() {
 				endEidted(this)
@@ -150,7 +150,7 @@ $.app = $.app || {};
 
 		$(window)
 			.on('hashchange', this.update.bind(this))
-			.on('beforeunload', this.model.save.bind(this.model))
+			.on('unload', this.model.save.bind(this.model))
 		$(document)
 			.ready(this.update.bind(this))
 	}

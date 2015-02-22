@@ -1,19 +1,19 @@
 /**
  * view.js
  */
-(function($) {
+(function(app) {
 
 	var todoTemplate =
-	'<li data-bind="vm:todos;addId:id;attr-title:time;checkStatus:completed">\
+		'<li data-bind="vm:todos;addId:id;attr-title:time;checkStatus:completed">\
 		<div class="view">\
-			<input class="toggle" type="checkbox" data-bind="checkCompleted:completed">\
+			<input class="toggle" type="checkbox" data-bind="checked:completed">\
 				<label data-bind="text:title;"></label>\
 				<button class="destroy"></button>\
 		</div>\
 		<input class="edit">\
 	</li>'
 
-	$.extend($.fn, {
+	var directive = {
 		addId: function(id) {
 			this.attr('data-id', id)
 		},
@@ -24,19 +24,9 @@
 				this.removeClass('completed')
 			}
 		},
-		checkCompleted: function(completed) {
-			if (completed) {
-				this.attr('checked', 'checked')
-				this[0].checked = true
-			} else {
-				this.removeAttr('checked')
-				this[0].checked = false
-			}
-		},
 		setHash: function(hash) {
-			var $target = this.find('[href="#' + hash + '"]')
 			this.find('.selected').removeClass('selected')
-			$target.addClass('selected')
+			this.find('[href="#' + hash + '"]').addClass('selected')
 		},
 		countActive: function(len) {
 			if (!len) {
@@ -62,5 +52,8 @@
 				this.refresh(list).show()
 			}
 		}
-	})
-}($));
+	}
+
+	app.View = directive
+
+}($.app));
