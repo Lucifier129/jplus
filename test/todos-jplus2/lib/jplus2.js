@@ -221,8 +221,8 @@
 
 	//将链式调用变成配置模式
 	//$elem.css(styleObj).attr('href', url).animate(obj) => $elem.invoke({css:styleObj,attr:['href', url], animate: obj})
-	$.fn.invoke = function(obj) {
-		new Call(this, obj).done()
+	$.fn.invoke = function(propChain, args) {
+		new Call(this, propChain, args).done()
 		return this
 	}
 
@@ -312,10 +312,10 @@
 	}
 
 	//根据特定指令名与作用域，扫描出特定结构的viewModel对象
-	function Scan($scope, directiveName, includeScope) {
+	function Scan($scope, directiveName, ignoreScope) {
 		this.$scope = $scope
 		this.directiveName = directiveName
-		this.includeScope = includeScope
+		this.ignoreScope = ignoreScope
 	}
 
 	Scan.prototype.done = function() {
@@ -339,7 +339,7 @@
 			$elems = $elems.not($noScanElems)
 		}
 		var combine = new Combine()
-		if (this.includeScope) {
+		if (!this.ignoreScope) {
 			new Collect(combine, $scope, directiveName).done()
 		}
 		$elems.each(function() {
@@ -355,9 +355,9 @@
 	}
 
 	//扫描视图，获取viewModel
-	$.fn.scan = function(directiveName, includeScope) {
+	$.fn.scan = function(directiveName, ignoreScope) {
 		directiveName = directiveName || $.directive.setter
-		var viewModel = new Scan(this, directiveName, includeScope).done()
+		var viewModel = new Scan(this, directiveName, ignoreScope).done()
 		return viewModel
 	}
 
@@ -484,6 +484,26 @@
 		}
 	}
 
+	//传递实例方法
+	function Deliver($target, $source) {
+		this.$target = $target
+		this.$source = $source
+	}
+
+	Deliver.prototype.done = function() {
+		var $target = this.$target
+		var $source = this.$source
+		var val
+		for (var key in $source) {
+			if (hasOwn($source, key)) {
+				val = $source[key]
+				if (isFn(val)) {
+					$target[key] = val
+				}
+			}
+		}
+	}
+
 	//根据view的propList，分派data的处理方式
 	function Assign($scope, view, data) {
 		this.$scope = $scope
@@ -498,6 +518,7 @@
 		var $elem = view.$elem
 		var elem = $elem[0]
 		var propList = view.propList
+
 		each(propList, function(propName) {
 			propName = propName.split('-')
 			var part1 = propName[0]
@@ -506,6 +527,9 @@
 
 			//先查$scope及其原型链，注：$.fn为其原型之一
 			if (isFn(prop)) {
+				if (part1 === 'refresh' || part1 === 'vm') {
+					new Deliver($elem, $scope).done()
+				}
 				prop.apply($elem, part2.concat(data))
 			} else {
 
@@ -536,7 +560,7 @@
 		}
 
 		//刷新视图时，扫描自身的指令；获取视图数据时，不扫描
-		var viewModel = $.fn.scan.call(this, directiveName || $.directive.setter, true)
+		var viewModel = $.fn.scan.call(this, directiveName || $.directive.setter)
 		new Sync(viewModel, dataModel).done()
 		return this
 	}
@@ -596,7 +620,7 @@
 
 	//收集视图中的数据，根据source指定要收集的数据及其数据结构
 	$.fn.collect = function(source, directiveName) {
-		var viewModel = $.fn.scan.call(this, directiveName || $.directive.getter, false)
+		var viewModel = $.fn.scan.call(this, directiveName || $.directive.getter, true)
 		if (isObj(source)) {
 			var oldView = viewModel.view
 			var newView = {}
