@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>test</title>
+        <meta name="description" content="">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="cleartype" content="on">
+        <style type="text/css">
+            body { background:#fafafa;}
+        </style>
+
+    </head>
+    <body>
+        <div id="container" data-bind="style.textAlign:align">
+            <header><h1 data-bind="html:header"></h1></header>
+            <p data-bind="text:words"></p>
+            <p data-bind="text:chain.words;title:chain.words;attr-hehe:chain.words"></p>
+            <p data-bind="view.text:chain.words"></p>
+            <div id="noscan" noscan data-bind="css-color:font.color">
+                <ul>
+                    <li data-bind="text:noscan.text;"></li>
+                </ul>
+            </div>
+        </div>
+
+<!-- <script type="text/javascript" src="../vendor/zepto.min.js"></script> -->
+<script type="text/javascript" src="../vendor/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="../../dist/jplus2.js"></script>
+<script type="text/javascript">
+$(function() {
+    var $container = $('#container')
+    var source = {
+        header: '测试zepto',
+        words: '测试普通取值',
+        chain: {
+            words: '测试点操作符链式取值'
+        },
+        //测试原生属性赋值
+        align: 'center',
+        //测试独立视图
+        font: {
+            color: '#666'
+        },
+        noscan: {
+            text: ['测试独立视图，禁止父元素扫描本元素的子元素', '同时测试repeat效果', 'repeat效果要求数据类型一致', '3', '4', '5', '6', '7']
+        }
+    }
+
+    $container.view = {
+        text: function(words) {
+            if (words) {
+                this.text(words + '-测试点操作符链式取用方法，链式取用参数')
+            } else {
+                return this.text()
+            }
+        }
+    }
+
+
+    $container.refresh(source)
+    $('#noscan').refresh(source)
+    //测试获取数据
+    console.log($container.collect())
+    //测试获取指定数据并转换结构
+    console.log($('#noscan').collect({
+        'noscan.text': 'text'
+    }))
+})
+</script>
+</body>
+</html>
