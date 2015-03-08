@@ -1,390 +1,405 @@
-jPlus
-=====
+# jplus
 
-不再喜欢「选择dom元素-进行操作」的编程风格？
+`jQuery指令插件`
 
-开始讨厌长长的链式调用？
 
-想用前端MV*框架，难以抛弃的jQuery库却成了阻碍？
+［在线教程与案例］
 
-试试jPlust提供的新选择——`jQuery 多态编程风格`
 
-jQuery中的MV*模式
+## 介绍
 
-## 用法
+### 引用`jplus`
 
-引入 jQuery，再引入 jplus，即可在浏览器端正常使用。
+作为`jQuery插件`引入
 
 ```html
-<script type="text/javascript" src="jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="jplus.js"></script>
 ```
 
-## 使用案例
+### 将数据同步到视图
 
-<a href="http://lucifier129.github.io/jplus/index.html" target="_blank">jPlus组件用例示范</a>
-
-## API说明
-
-###$.fn.render(api)
-
-该方法的作用是，将部分链式调用拆分成key-value的形式；
-
-`render`方法接受一个对象作为参数；
-
-其`key`为`$.fn`中存在的任意方法名（包括`render`自身）；
-
-其`value`的值将作为`key`所对应的方法的参数,如果`$.fn[key]`接受多个参数，则写成数组形式；
-
-```javascript
-$('body').render({
-	text: '$.fn.text 方法将该段文字载入body中',
-	css: ['background', '#f00']
-});
+首先：在`html`中使用`data-bind`属性，按照`css语法`书写`key:value;`
+    
+```html
+<div id="scope">
+    <p data-bind="attr-class:className">Hello <span data-bind="text:name"></span></p>
+</div>
 ```
 
-针对`$('body')`的所有`$.fn[key]`操作，它们的参数都由`$.fn.render`集中处理；
+然后：在`javascript`中调用`jQuery`的`refresh`方法
 
-<a href="http://jsbin.com/jelerejafete/1/edit" target="_blank">`$.fn.render`的在线demo</a>
+```javascript
+$('#scope').refresh({
+    name: 'jplus.js',
+    className: 'descri'
+})
+```
 
-###$.fn.refresh(model)
+大功告成
 
-该方法的作用是，管理一个区域的参数，需要配合`html`代码，如下所示：
+`html` 标签的`data-bind`属性中，`key`可以为如下内容
+
+* `jQuery`实例的方法，即在实例化后，手动添加在该实例上的方法名
+* `jQuery`的原型方法的名字，即`$.fn`上的方法名
+* `jQuery`实例对应的`dom`元素的方法名与属性名
+
+而`value`则对应数据对象的属性名。
+
+`key`和`value`都支持点操作符和方括号操作符链式取值, 如下都是合法的
+* `a.b.c.e.f`
+* `a[0].b[1]`
+
+注意事项：避免空指令。如果找不到对应的方法函数，数据将直接成为`dom元素`的属性
+
+
+### 将`jplus`用作模板引擎
+
+只要将数据打包成数组，`jplus`就会自动安排同等数量的元素对应；不够的`clone`出来，多余的`remove`掉
 
 ```html
-<html>
-<body>
-	<div class="wrap" js="css-textAlign: align;">
-		<ul js="css-color: color;">
-			<li js="text: txt;"></li>
-			<li js="txt; animate: anim;"></li>
-			<li js="txt; render: data;"></li>
-		</ul>
-	</div>
-</body>
-</html>
-```
-
-`html`中`js`属性的书写格式与`CSS`一样，属性名与`render`方法一样，都来自`$.fn`但并不把具体的值写在上面，而是写一个自定义的变量名，具体的值在 `javascript`按需选择，按需改变；
-
-`refresh`只管理一个区域，接受一个对象作为参数；
-
-其`key`为上述`html`代码里自定义的变量名，其`value`值将作为相对应的`$.fn`属性名的参数
-
-```javascript
-$('body').refresh({
-
-	align: 'center',
-
-	color: 'green',
-
-	txt: [1,2,3,4,5,6,7,8,9,0],
-
-	anim: [{
-		textIndent: '100px',
-		lineHeight: '100px'
-	}, 1000],
-
-	data: {
-		html: '<span js="text: txt1"></span><span js="text: txt2"></span><span js="text: txt3"></span>',
-		refresh: {
-			txt1:'span1',
-			txt2:'span2',
-			txt3:'span3'
-		}
-	},
-
-	func: function() {
-		this.css('color', '#f00');
-	}
-});
-
-//可多次使用
-setTimeout(function() {
-  console.log($('body').getVM());
-  $('body').refresh({
-    align:'right',
-    color:'blue',
-    txt:'change'
-  });
-}, 1000);
-```
-当多个`dom`拥有同一个`js`属性，如上面的`text:txt`，那么第二个开始text可以省略，只需要写txt即可；
-
-此时，`txt`属性若为数组，且`length`大于等于2，且所有项都是同一数据类型，数组的项将依次作为参数传入`$.fn.text`方法,否则所有`dom`操作接受的参数都一样；
-
-当数组的`length`大于当前被`txt`标识的`dom`的个数时，将以第一个被txt标识的`dom`为模板，自动生成和添加到最后一个被txt标识的`dom`的后面，即自带repeat效果；
-
-如果数组的`length`小于当前被`txt`标识的`dom`个数，则只刷新前length个`dom`；
-
-`refresh`可嵌套使用，即它也可以被写在`html`标签的`js`属性中作为属性名；
-
-当它与可嵌套的`render`方法配合使用时，相当于自带模板引擎，而且不需要破坏`html`代码的纯粹性；
-
-在模板字符串中添加js属性，然后调用`refresh`刷新当前dom区域即可；
-
-`refresh`可多次使用，以便动态更新`dom`区域;
-
-ps:`html`标签中如果出现了`noscan`或`app`属性，该标签的子元素将只由它的`refresh`或`listen`方法来管理，该标签的父元素的`refresh`不扫描该标签子元素的js属性；如此切割分配区域
-
-<a href="http://jsbin.com/yoxezuzefepa/1/edit" target="_blank">`$.fn.refresh`的在线demo</a>
-
-###$.fn.listen
-
-该方法的作用时，返回一个被侦听的对象，当其属性变化时，自动调用`refresh`方法
-
-沿用上面的`html`代码，`listen`方法的使用方式如下：
-
-```javascript
-var model = {
-
-	align: 'center',
-
-	color: 'green',
-    //自带repeat，如果数组的length大于目前的目标dom数量，则自动添加
-	txt: [1,2,3,4,5,6,7,8,9,0],
-
-	anim: [{
-		textIndent: '100px',
-		lineHeight: '100px'
-	}, 1000],
-
-	data: {
-		html: '<span js="text: txt1"></span><span js="text: txt2"></span><span js="text: txt3"></span>',
-		refresh: {
-			txt1:'span1',
-			txt2:'span2',
-			txt3:'span3'
-		}
-	},
-
-	func: function() {
-		this.css('color', '#f00');
-	}
-};
-
-model = $('body').listen(model);
-
-//可多次使用
-setTimeout(function() {
-
-model.extend({
-    align:'right',
-    color:'blue',
-    txt:'change'
-  });
-
-}, 1000);
-```
-
-使用`listen`方法时，自定义的变量名范围将受到约束，不建议与`dom`元素的原生属性（如data、title、style）重复，否则会抛出错误；
-
-`listen`返回的对象拥有`extend`和`each`方法，作用于`$.extend`和`$.each`类似，请用该对象自带的这两个方法，不要以其他形式遍历该对象；
-
-<a href="http://jsbin.com/codudajiginu/1/edit" target="_blank">`$.fn.listen`的在线demo</a>
-
-###$.define(selector, callback)
-
-`$.define`是`$.fn.listen`的静态方法版本，放回值也一样，都是受侦听的对象；
-
-它接受两个参数，其一为`jQuery`选择器，指定要管理的区域，第二参数为函数类型；
-
-沿袭上面的例子，`$.define`用法如下：
-
-```javascript
-
-var model = $.define('body', function($scope) {
-	$.extend($scope, {
-
-		align: 'center',
-
-		color: 'green',
-	    //自带repeat，如果数组的length大于目前的目标dom数量，则自动添加
-		txt: [1,2,3,4,5,6,7,8,9,0],
-
-		anim: [{
-			textIndent: '100px',
-			lineHeight: '100px'
-		}, 1000],
-
-		data1: {
-			html: '<span js="text: txt1"></span><span js="text: txt2"></span><span js="text: txt3"></span>',
-			refresh: {
-				txt1:'span1',
-				txt2:'span2',
-				txt3:'span3'
-			}
-		},
-
-		func: function() {
-			this.css('color', '#f00');
-		}
-	});
-});
-
-//可多次使用
-setTimeout(function() {
-
-model.extend({
-    align:'right',
-    color:'blue',
-    txt:'change'
-  });
-
-}, 1000);
-```
-
-除了操作传入的参数$scope外，直接返回一个对象也可以
-
-<a href="http://jsbin.com/xejivunekope/1/edit" target="_blank">`$.define`的在线demo</a>
-
-###$.render
-
-`$.render` 将 `js="render: obj"` 简化成 `render="obj"`；
-
-```html
-<div class="header" render="header"></div>
-<div class="main" render="main"></div>
-<div class="footer" render="footer"></div>
-```
-不是任意方法都可以如此简化，仅限于 `render` 方法。
-
-```javascript
-		$.render({
-			header: {
-				html: '<h1>HEADER</h1>',
-				css:['color', '#333']
-			},
-			main: {
-				text: 'MAIN',
-				css: ['text-indent', '2em']
-			},
-			footer: {
-				html: '<p js="text:txt"></p>',
-				refresh: {
-					txt: 'FOOTER'
-				}
-			}
-		});
-```
-
-###$.module
-
-`$.module`是一个被侦听的对象，它可以管理整个页面的所有`app`区域
-
-上述例子的`html`代码要新增一些内容：
-
-```html
-<body app="global">
-  <div class="wrap" js="css-textAlign: align;">
-    <ul js="css-color: color;">
-      <li js="text: txt;"></li>
-      <li js="txt; animate: anim;"></li>
-      <li js="txt; render: data1;"></li>
+<div id="scope">
+    <ul>
+        <li data-bind="text:list">写一些默认内容，待会儿就被覆盖</li>
     </ul>
-  </div>
-</body>
+</div>
 ```
 
 ```javascript
-	$.module.ready(function() {
-		`this.global = {
+var list = []
 
-			align: 'center',
+for (var i = 0; i < 20; i += 1) {
+    list[i] = '列表项目' + i
+}
 
-			color: 'green',
-				//自带repeat，如果数组的length大于目前的目标dom数量，则自动添加
-				txt: [1,2,3,4,5,6,7,8,9,0],
-
-				anim: [{
-					textIndent: '100px',
-					lineHeight: '100px'
-				}, 1000],
-
-				data1: {
-					html: '<span js="text: txt1"></span><span js="text: txt2"></span><span js="text: txt3"></span>',
-					refresh: {
-						txt1:'span1',
-						txt2:'span2',
-						txt3:'span3'
-					}
-				},
-
-				func: function() {
-					this.css('color', '#f00');
-				}
-			};
-
-
-			setTimeout(function() {
-				$.module.global.extend({
-				    align:'right',
-				    color:'blue',
-				    txt:'change'
-				  });
-			}, 1000)
-		});
+setInterval(function() {
+    //随机长度
+    var randomLen = Math.floor(Math.random() * list.length + 1)
+    var curList = list.concat().sort(function() {
+        //随机化排序
+        return Math.random() - 0.5
+    })
+    
+    curList.length = randomLen
+    
+    $('#scope').refresh({
+        list: curList
+    })
+}, 800);
 ```
 
-`$.module.ready`方法将在`$(document).ready(fn)`的基础上，扫描页面所有`app`区域；
+注意事项：
+- 只有数据类型一致的数组，才作为模板数据
+- 数据类型不同的数组，全部作为参数传入指令方法
+- 传入空数组，对应的`dom元素`将全部删除
+- 每次调用`refresh`方法，都会即时扫描视图，如果元素被删除，则无法收集指令
+- 可以通过故意为数组追加`null`、`false`等强行将数据类型不一致化，达到传多个参数的目的
 
-将`model`数据赋值给它的属性，自动生成一个`listen`后的对象，刷新视图，此后不断'extend'数据即可
+## 渲染嵌套数据到视图
 
-<a href="http://jsbin.com/bapeqomenila/1/edit" target="_blank">`$.module`的在线demo</a>
+将`refresh`作为指令，即可渲染嵌套数据
 
-
-###$.observe
-
-该静态方法用以侦听对象的属性变化，事件触发做了异步处理，过滤掉了相同的值，以及短时间内反复重置某个属性时，只取最后一个更新的值
-
-`$.observe`方法返回的对象拥有四个方法，`on`方法添加事件，`off`方法解除事件，`each`遍历对象，`extend`拓展对象
+```html
+<div id="scope">
+    <ul>
+        <li data-bind="refresh:classList">
+            <h3 data-bind="text:classTitle"></h3>
+            <ul>
+                <li data-bind="text:content"></li>
+            </ul>
+        </li>
+    </ul>
+</div>
+```
 
 ```javascript
-	var obj = $.observe({});
+var data = {
+    classList:[{
+        classTitle:'类名1',
+        content:[1, 2, 3, 4, 5]
+    },{
+        classTitle:'类名2',
+        content:[6, 7, 8, 9, 10]
+    },{
+        classTitle:'类名3',
+        content:[11, 12, 13, 14, 15]
+    },{
+        classTitle:'类名4',
+        content:[16, 17, 18, 19, 20]
+    },{
+        classTitle:'类名5',
+        content:[21, 22, 23, 24, 25]
+    }]
+}
 
-	obj.on('test', function(value, propName, oldValue) {
-		//this值指向obj
-		document.body.innerHTML += [].slice.call(arguments).join(' ') + '<br>';
-	});
+$('#scope').refresh(data)
+```
 
-	obj.on('test.nameSpace1', function(value, propName, oldValue) {
-		//支持命名空间
-		document.body.innerHTML += 'nameSpace1' + [].slice.call(arguments).join(' ') + '<br>';
-	});
+### 禁止父元素扫描自身的子元素
 
-	obj.on('test.nameSpace2', function(value, propName, oldValue) {
-		//支持命名空间
-		document.body.innerHTML += 'nameSpace2' + [].slice.call(arguments).join(' ') + '<br>';
-	});
+添加`noscan`属性后，只有该元素的`jQuery实例`调用`refresh`才能刷新视图
 
-	obj.each(function(key, value) {
-		document.body.innerHTML += key + ':' + value + '<br>';
-	});
+```html
+/*添加noscan属性，视图私有化*/
+<div noscan>
+	<span data-bind="text:text"></span>
+</div>
+```
 
-	obj.extend({
-		test: 'extend'
-	});
+### 禁止数组数据改变元素数量
 
-	obj.off('.nameSpace2');
+添加`norepeat`属性后，遇到数据类型一致的数组，数据比元素多时，忽略多余数据；元素比数据多时，忽略多余元素
 
-	obj.test = 'change';
+```html
+/*不论多少数据，都只更新现有的元素*/
+<div norepeat>
+	<li data-bind="text:text"></li>
+</div>
+```
+
+### 从视图中获取数据
+
+`jQuery`的`API设计`理念之一是：既是`getter`，也是`setter`
+
+```javascript
+$('body').html() // get HTML
+$('body').html(content) // set HTML
+$('body').attr('id') // get ID
+$('body').attr('id', newID) // set ID
+```
+
+对于这类指令。当需要刷新视图时，`jplus`传入数据；当需要从视图中获取数据时，`jplus`不传参数或者只传必要的参数。
+
+在上一个例子中，只需要调用`collect`方法，就从视图中获取了所需的数据。
+
+### 自定义指令
+
+所谓指令，在`jplus`中指写在`html`的`data-bind`属性中，格式类似`css语法`的`键值对`
+
+```html
+<ul id="scope">
+    <li data-bind="text:msg; setTitle:title; setData-directive:directive"></li>
+</ul>
+```
+
+```javascript
+//插件写法，为原型添加方法，属于全局指令
+$.fn.setTitle = function(title) {
+    if (typeof title === 'undefined') {
+        return this.attr('title')
+    } else {
+        this.attr('title', title)
+    }
+}
+
+var $scope = $('#scope')
+
+//实例特有方法，属于局域指令
+$scope.setData = function(name, val) {
+    if (!name) {
+        return
+    }
+    if (typeof val === 'undefined') {
+        return this.attr('data-' + name)
+    } else {
+        this.attr('data-' + name, val)
+    }
+}
+
+$scope.refresh({
+    msg: '一点测试文本，没有别的意思',
+    title: '啊,title',
+    directive: 'css-color:theColor;css-fontSize:size;'
+})
+
+//自定义指令，如果也按照getter && setter设计，也能获取数据
+$('body').append(JSON.stringify($scope.collect()))
+
+setTimeout(function() {
+    
+    //directive不会刷新到视图中，因为新的实例不具备setData方法
+    //但是，它会成为dom.setData的属性值，这是需要注意的点
+    $('#scope').refresh({
+        msg: '我是原型方法，所以全局通用，新实例也能调用我',
+        directive: 'new directive'
+    })
+    
+    //从视图中获取数据，也可以获取属性的，所以directive值还是能从dom.setData中得到
+    $('body')
+        .append('<br><br><br>')
+        .append(JSON.stringify($('#scope').collect()))
+}, 3000)
 
 ```
-<a href="http://jsbin.com/bapeqomenila/1/edit" target="_blank">`$.module`的在线demo</a>
+
+### 动态调用指令
+
+`jplus`提供了`invoke`方法，提供动态用功能，有两种用法
+
+```javascript
+//单个调用
+$scope.invoke('html', '<p>some text</p>')
+
+//多个调用
+$scope.invoke({
+	html: '<p>some word</p>',
+	css: ['color', '#999'], //多个参数打包成数组形式
+	attr: ['title', 'a title']
+})
+```
 
 
-##补充说明
+```html
+<div id="scope">
+    <input type="text" data-bind="invoke:text" />
+</div>
+```
 
-`jPlus`的核心是`render`和`refresh`方法，其他方法都是在`$.observe`的支持下提供的不同风格；
+```javascript
+var count = 0
+var timer = setInterval(function() {
+    var data = [{
+            text: {
+                'val': count - 1,
+                'attr': ['title', count - 1]
+            }
+        },{
+            text: {
+                'css': ['font-size', count]
+            }
+        }]
+    $('#scope').refresh(data[count % 2])
+   count++
+   if (count === 100) {
+       clearInterval(timer)
+   }
+}, 300)
+```
 
-充分领会`refresh`的用法，已能带来`jQuery`编程风格上的极大不同；
+### 将`data-bind`拆分为`data-get`和`data-set`
 
-希望`jPlus`确实能帮助到开发者使用`jQuery`时有更好的体验；
+```javascript
+//jplus 源码如下。修改属性值即可
+$.directive = {
+	getter: 'data-bind', //对应获取数据
+	setter: 'data-bind' //对应刷新视图
+}
 
-`jPlus`提供的一切方法，都支持IE6+;
+//修改
+$.directive.getter = 'data-get'
+$.directive.setter = 'data-set'
+```
 
-请多多反馈不足之处，以便改进。
+### 获取视图模型
+
+在`jplus`中，视图模型是指从作用域扫描出来的特定结构的指令和`dom元素`，本质是一个`object`对象
+
+```javascript
+//获取视图模型
+$scope.scan()
+
+//以特定的html属性作为指令来源，不会改变$.directive.getter || $.directive.setter
+//从data-js属性中得到指令集
+$scope.scan('data-js')
+
+//第二个参数传true时，$scope本身的'data-js'属性将被忽略
+$scope.scan('data-js', true)
+```
+
+### 指定视图中需要获取的数据
+
+`$.fn.collect`接受两个参数，第一个参数为`object`对象，第二个参数为`string`类型，将作为第一个参数传入`$.fn.scan`
+
+```javascript
+//只收集'dataName'，并且指定'data-collect'为指令来源，而非扫描'data-bind'
+$scope.collect({
+    'dataName': 'dataName'
+}, 'data-collect')
 
 
+//只收集'dataName'，并且改变数据结构，将值存储到新对象的data.name属性中，如：{data:{name:value}}
+$scope.collect({
+    'dataName': 'data.name'
+})
+
+//jplus所有支持字符串属性名的地方，都可以用点操作符
+$scope.collect({
+    'a.b.c.e.f': 'a.f'
+})
+
+```
+
+### 指定html属性作为指令来源刷新视图或获取数据
+
+`$.fn.refresh`与'$.fn.collect'的第二个参数，可以指定本次刷新视图或获取数据的指令来源
+
+```javascript
+//指定data-a为指令来源，刷新视图
+$scope.refresh(data, 'data-a')
+
+//指定data-b为指令来源，获取数据
+$scope.collect(null, 'data-b')
+```
+
+### 获取视图中的嵌套数据
+
+渲染嵌套数据到视图的方法是，将`refresh`写在指令中，它只是`setter`；因此获取嵌套数据时，应用`vm`替代
+
+`vm`方法是一个按照`既是setter，也是getter`设计的API。
+
+```javascript
+//jplus源码
+$.fn.vm = function(dataModel) {
+    return isObj(dataModel) ? this.refresh(dataModel) : this.collect()
+}
+```
+
+沿用渲染嵌套数据到视图的例子，稍作修改，就能改造成`get/set`模式
 
 
+```html
+<div id="scope">
+    <ul>
+        <!--没有noscan属性的话，classTitle和content也会被抽取出来，跟classList平级-->
+        <li data-bind="vm:classList" noscan>
+            <h3 data-bind="text:classTitle"></h3>
+            <ul>
+                <li data-bind="text:content"></li>
+            </ul>
+        </li>
+    </ul>
+</div>
+```
+
+```javascript
+var data = {
+    classList:[{
+        classTitle:'类名1',
+        content:[1, 2, 3, 4, 5]
+    },{
+        classTitle:'类名2',
+        content:[6, 7, 8, 9, 10]
+    },{
+        classTitle:'类名3',
+        content:[11, 12, 13, 14, 15]
+    },{
+        classTitle:'类名4',
+        content:[16, 17, 18, 19, 20]
+    },{
+        classTitle:'类名5',
+        content:[21, 22, 23, 24, 25]
+    }]
+}
+
+$('#scope').refresh(data)
+
+//只该了html属性，就可以直接用$.fn.collect获取数据了
+$('body').append(JSON.stringify($('#scope').collect()))
+
+console.log($('#scope').collect())
+```
+
+[jplus]:https://github.com/Lucifier129/jplus
+[微博]:http://weibo.com/islucifier
+[Github]:https://github.com/Lucifier129
+[在线教程与案例]:http://lucifier129.github.io/jplus2/m/index.html
