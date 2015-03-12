@@ -1,2 +1,639 @@
-/* jplus 2014-12-30 */
-(function(t){var n;try{if(define.amd?n=requirejs.s.contexts._.config.paths:define.cmd&&(n=seajs.data.alias),"jquery"in n)define(function(n){var e=n("jquery");return t(e,window),e});else{if(!("zepto"in n))throw Error("No jQuery and Zepto");define(function(n){var e=n("zepto");return t(e,window),e})}}catch(e){t(window.jQuery||window.Zepto||window,window)}})(function(t,n,e){function r(t){return function(){return Function.prototype.call.apply(t,arguments)}}function i(t){return function(n){return null==n?n:y(n)==="[object "+t+"]"}}function o(t,r,i){if(t==e||!O(r))return t;var o,a=t.length,s=0;if(a===+a&&a>0){for(;a>s;s+=1)if(o=r.call(i||n,t[s],s),o!==e)return o;return t}var u,f=N.keys(t);for(a=f.length;a>s;s+=1)if(u=f[s],o=r.call(i||n,t[u],u),o!==e)return o;return t}function a(){var t,n=arguments[0];if("boolean"==typeof n&&(t=n,n=arguments[1]),"object"!=typeof n&&!O(n))return n;var e=w(arguments,t?2:1);return o(e,function(e){"object"==typeof e&&o(e,function(e,r){if(t&&"object"==typeof e){var i=n[r];return n[r]="object"==typeof i?i:{},a(t,n[r],e)}n[r]=e})}),n}function s(t){if(!M(t))return!1;var n,e,r=t.length;if(r>1)for(n=y(t[0]),e=r-1;e>0;e--)if(y(t[e])!==n)return!1;return!0}function u(t){return t+Math.random().toString(36).substr(2)}function f(t){return setTimeout(t,0)}function c(t){var n;return j(t)?n=a(!0,{},t):M(t)?(n=[],o(t,function(t,e){n[e]=c(t)})):n=t,n}function l(t){if(!D.ES5&&t in V)throw Error("If you want to support IE6/7/8. The property name [ "+t+" ] can not be observed, "+"because DOM has the same property name. "+"You can use the [observe.ES5 = true] to ignore IE6/7/8.")}function h(t){t.prevObject=t.context=null,this.$startNode=t,this.viewModel={}}function v(t,n){return t.$info[n]}function p(n){var e=t(n).clone()[0];return e.$info=n.$info,e}function d(n,e,r){var i=v(n,r);if(i){var a=i.params,s=t(n);o(i.method,function(t,n){var r=z[t]||_;r.apply(s,a[n].concat(e))})}}function _(){window.console&&console.log("calling noop")}function g(t,n,e){this.dataModel=t,this.viewModel=n,this.startNode=e}var m=Object.prototype,y=r(m.toString),b=r(m.hasOwnProperty),w=r(Array.prototype.slice),j=i("Object"),x=i("String"),O=i("Function"),M=Array.isArray||i("Array");if(!String.prototype.trim){var E=/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;String.prototype.trim=function(){return this.replace(E,"")}}var N={keys:Object.keys||function(t){var n=[];if(!j(t))return n;for(var e in t)b(t,e)&&n.push(e);return n},parse:function(t){var n={};if(!x(t))return n;var e=t.trim().split(";");return o(e,function(t){if(t=t.trim().split(":"),!(2>t.length)){var e=t[1].trim();n[e]=n[e]||{},n[e][t[0].trim()]=1}}),n}},A=Object.create||function(t){var n=function(){};return n.prototype=t,new n};Array.prototype.indexOf||(Array.prototype.indexOf=function(t){for(var n=this.length-1;n>=0;n--)if(this[n]===t)return n;return-1});var $=function(t,n,e,r){if(t===n)return 0!==t||1/t===1/n;if(null==t||null==n)return t===n;var i=y(t);if(i!==y(n))return!1;switch(i){case"[object RegExp]":case"[object String]":return""+t==""+n;case"[object Number]":return+t!==+t?+n!==+n:0===+t?1/+t===1/n:+t===+n;case"[object Date]":case"[object Boolean]":return+t===+n}var o="[object Array]"===i;if(!o){if("object"!=typeof t||"object"!=typeof n)return!1;var a=t.constructor,s=n.constructor;if(a!==s&&!(O(a)&&a instanceof a&&O(s)&&s instanceof s)&&"constructor"in t&&"constructor"in n)return!1}for(var u=e.length;u--;)if(e[u]===t)return r[u]===n;e.push(t),r.push(n);var f,c;if(o){if(f=t.length,c=f===n.length)for(;f--&&(c=$(t[f],n[f],e,r)););}else{var l,h=N.keys(t);if(f=h.length,c=N.keys(n).length===f)for(;f--&&(l=h[f],c=b(n,l)&&$(t[l],n[l],e,r)););}return e.pop(),r.pop(),c};N.isEqual=function(t,n){return $(t,n,[],[])};var S,F,q=document,k=q.getElementsByTagName("head")[0],V=q.createComment("Kill IE6/7/8"),C=/\[native code\]/;C.test(Object.defineProperty)&&C.test(Object.create)?F=Object.defineProperty:C.test(Object.prototype.__defineSetter__)&&(F=function(t,n,e){t.__defineGetter__(n,e.get),t.__defineSetter__(n,e.set)});var I;F?(S=!0,I=function(t,n){function e(){r=!1,o(t.__events__[n],function(e){o(e,function(e){e.call(t,i,n,a)})}),a=c(i)}if(!(n in t.__events__)){var r,i=t[n],a=c(i);F(t,n,{get:function(){return i},set:function(t){i=t,r||N.isEqual(t,a)||(r=!0,f(e))}})}}):"onpropertychange"in k&&(I=function(t){function n(n,i){var a=e[n],s=t[n];r[n]=!1,N.isEqual(s,a)||(o(i,function(e){o(e,function(e){e.call(t,s,n,a)})}),e[n]=c(s))}if(!t.onpropertychange){var e={},r={};t.each(function(t,n){e[n]=c(t)}),t.onpropertychange=function(t){var e=(t||window.event).propertyName,i=this.__events__;if(e in i){if(r[e])return;r[e]=!0,f(function(){n(e,i[e])})}}}});var B={_add:function(t,n,e){l(t),I(this,t),e=e||u("observer");var r=this.__events__[t]=this.__events__[t]||{};return r[e]=r[e]||[],r[e].push(n),this},on:function(){var t,n=this,e=w(arguments),r=e.length;if(1===r)j(t=e[0])?o(t,function(t,e){n.on(e,t)}):O(t)&&this.each(function(e,r){n._add(r,t,"__all__")});else if(2===r){if(!O(e[1]))return this;if(x(t=e[0])){var i=t.indexOf(".");0>=i?this._add(t,e[1]):this._add(t.substr(0,i),e[1],t.substr(i+1))}else M(t)&&o(t,function(t){n.on(t,e[1])})}return this},_bang:function(t,n,e){var r=this,i=r[t];o(this.__events__[t][e],function(e){e.call(r,n,t,i)})},trigger:function(t,n){var e,r=this;return t?(x(t)?(e=t.indexOf("."),e>0?this._bang(t.substr(0,e),n,t.substr(e+1)):e?o(this.__events__[t]||[],function(e,i){r._bang(t,n,i)}):(t=t.substr(1),o(this.__events__,function(e,i){o(e,function(e,o){o===t&&r._bang(i,n,o)})}))):M(t)&&o(t,function(t){r.trigger(t,n)}),this):this},_remove:function(t,n,e){var r=this.__events__[t][e]||[],i=r.indexOf(n);return-1!==i&&r.splice(i,1),this},off:function(){var t,n,e=this,r=w(arguments),i=r.length;if(i){if(1===i)O(t=r[0])?o(this.__events__,function(n,r){o(n,function(n,i){e._remove(r,t,i)})}):x(t)&&(n=t.indexOf("."),0>=n?this.__events__[t]={}:delete this.__events__[t.substr(0,n)][t.substr(n+1)]);else if(2===i){if(!O(r[1]))return this.off(r[0]),this;x(t=r[0])?(n=t.indexOf("."),0>=n?o(this.__events__[t],function(n,i){e._remove(t,r[1],i)}):this._remove(t.substr(0,n),r[1],t.substr(n+1))):M(t)&&o(t,function(t){e.off(t,r[1])})}}else this.__events__={};return this},offAll:function(){var t=this;return o(this.__events__,function(n,e){t.off([e,"__all__"].join("."))}),this},each:function(t){var n=this;if(this.nodeName)for(var e in this)-1!==n.filter.indexOf(e)||e in V||t.call(n,this[e],e);else o(this,function(e,r){-1===n.filter.indexOf(r)&&t.call(n,e,r)});return this},extend:function(){return a.apply(n,[this].concat(w(arguments)))},once:function(t,n){function e(){n.apply(r,arguments),r.off(e)}var r=this;return t+=".once",this.on(t,e)},tie:function(t,n){if(!O(n))return this;if(M(t)){var e=this,r=t.length,i=[],a=[],s=function(s,u){0>i.indexOf(u)?(i.push(u),i.length===r&&(o(t,function(t,n){t=t.split(".")[0],a[n]=e[t]}),n.apply(e,a))):i.length>=r&&(i.length=0,i.push(u))};return this.on(t,s)}return x(t)?(t=t.split(" "),t.length>1?this.tie(t,n):this.on(t[0],n)):this},collect:function(t,n,e){function r(t){o.push(t),o.length===n&&(e.apply(i,o),i.off(r))}var i=this,o=[];return this.on(t,r)},hold:function(t,n,e){function r(t){++o===n&&(e.call(i,t),i.off(r))}var i=this,o=0;return this.on(t,r)}};B.bind=B.on,B.unbind=B.off,B.fire=B.trigger,B.filter=N.keys(B).concat(["__events__","filter"]);var D=S?function(t,n){if(!j(t))return{};var e=a(A(B),t,{__events__:{}});return j(n)||O(n)?e.on(n):e}:function(t,n){if(!j(t))return{};var e=a(k.appendChild(q.createComment("[object Object]")),B,t,{__events__:{}});return j(n)||O(n)?e.on(n):e};if(D.ES5=!1,D.fn=B,t.observe=D,t!==n){var P=t.plus={attr:"js",filterAttr:["noscan","app"],viewModel:[]},T=r(Array.prototype.push);h.prototype={filter:function(n){var e=[],r=this.$startNode[0],i=r.id=r.id||"filter_id_for_scaner";return o(P.filterAttr,function(n){var r=t(["#"+i,"["+n+"]","["+P.attr+"]"].join(" "));e.push.apply(e,w(r))}),"filter_id_for_scaner"===i&&(r.removeAttribute?r.removeAttribute("id"):r.id=""),n.filter(function(){return-1===e.indexOf(this)})},parse:function(n){var r=this.viewModel;return o(N.parse(n.attr(P.attr)),function(i,a){var s=r[a]=r[a]||{},u=n[0],f=u.$info=u.$info||{};if(f[a]=f[a]||{method:[],params:[]},o(i,function(t,n){n=n.split("-"),f[a].method.push(n[0]),f[a].params.push(n.slice(1))}),s.instance)T(s.instance,u);else{s.instance=t(u),s.lastValue=s.instance.context=null,s.alive=n.attr("unalive")!=e?!1:!0,s.template=u.cloneNode(!0),s.template.$info=f;var c=u.parentNode;s.parent=/fragment/i.test(c.nodeName)?null:c}}),this},scan:function(){var n=this;return this.parse(this.$startNode).filter(this.$startNode.find("["+P.attr+"]")).each(function(){var e=t(this);e.prevObject=e.context=null,n.parse(e)}),this},rescan:function(){return this.viewModel={},this.scan()},get:function(){return this.viewModel}},t.fn.scanView=function(t){if(!this.length)return{};this[0];var n=this.attr("data-vmindex");if(null!=n&&!t)return P.viewModel[n].get();null==n&&this.attr("data-vmindex",n=P.viewModel.length);var e=P.viewModel[n]=new h(this);return e.scan().get()};var z=t.fn;t.noop=t.noop||function(){},g.prototype={refresh:function(){for(var t,n,r=this.viewModel,i=this.dataModel,o=N.keys(r),a=0,s=o.length;s>a;a+=1)n=o[a],t=i[n],t!==e&&this.render(r[n],t,n)},render:function(n,e,r){if(!N.isEqual(e,n.lastValue)){n.lastValue=c(e);var i=n.instance;if(s(e)){var o,a,u=i.length,f=e.length;if(n.alive)if(u>=f)for(i.slice(f).each(function(){var n=t(this),e=n.attr("data-vmindex");null!=e&&(P.viewModel[e]=null),n.find("[data-vmindex]").each(function(){P.viewModel[t(this).attr("data-vmindex")]=null}),n.remove()}),i=n.instance=i.slice(0,f),i.prevObject=null,a=0;f>a;a+=1)d(i[a],e[a],r);else{var l=n.template,h=q.createDocumentFragment();for(a=0;f>a;a+=1)u>a?o=i[a]:(o=p(l),T(i,h.appendChild(o))),d(o,e[a],r);if(h.childNodes.length)if(!u&&n.parent)n.parent.appendChild(h);else{var v,_=i[u-1];(v=_.nextSibling)?_.parentNode.insertBefore(h,v):_.parentNode.appendChild(h)}l=h=null}else{var g=Math.min(u,f);for(a=0;g>a;a+=1)d(i[a],e[a],r)}}else i.each(function(){d(this,e,r)})}}},t.fn.refresh=function(t){var n=this,e=this[0];return j(t)?new g(t,this.scanView(),e).refresh():M(t)&&o(t,function(t,r){var i=n.eq(r);i.length&&new g(t,i.scanView(),e).refresh()}),this},a(t.fn,{render:function(n){function e(t,n){var e=i[n];O(e)&&e[M(t)?"apply":"call"](r,t)}var r=this,i=t.fn;return j(n)?o(n,e):M(n)&&o(n,function(t){j(t)&&o(t,e)}),this},listen:function(n){var e=this;return e.refresh(n),t.observe(n,function(t,n){var r={};r[n]=t,e.refresh(r)})}}),t.define=function(n,r){var i,o=t(n);return o.length?(i={},i=r(i)||i,o.listen(i)):e},t.render=function(n){return t("[render]").each(function(){var e,r=t(this),i=r.attr("render");i in n&&j(e=n[i])&&r.render(e)}),this};var Q={vmodel:{},ready:function(n){var e=this;return t(document).ready(function(){n.call(e.$scan())}),this},$scan:function(){var n=this;return t("[app]").each(function(){var e=t(this),r=e.attr("app"),i=!1;n.vmodel[r]=e.scanView(),n.on(r+".module",function(t,n){!i&&j(t)&&(i=!0,this[n]=e.listen(t),i=!1)})}),this}};t.module=t.observe(Q)}});
+/*
+ * jplus
+ */
+! function($, undefined) {
+
+	//base
+	var objProto = Object.prototype
+	var arrProto = Array.prototype
+	var call = Function.prototype.call
+
+	if (!arrProto.indexOf) {
+		arrProto.indexOf = function(value) {
+			for (var i = this.length - 1; i >= 0; i--) {
+				if (this[i] === value) {
+					return i
+				}
+			}
+			return -1
+		}
+	}
+
+	if (!String.prototype.trim) {
+		var rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g
+		String.prototype.trim = function() {
+			return this.replace(rtrim, '')
+		}
+	}
+
+	//反柯里化
+	//接受一个函数
+	//返回一个函数：1）首个参数作为原函数的this；2）其余参数传入原函数
+	function calling(fn) {
+		return function() {
+			return call.apply(fn, arguments)
+		}
+	}
+
+	var toStr = calling(objProto.toString)
+	var hasOwn = calling(objProto.hasOwnProperty)
+	var slice = calling(arrProto.slice)
+
+	//返回一个检测输入的obj是否符合特定数据类型的函数
+	function isType(type) {
+		type = '[object ' + type + ']'
+		return function(obj) {
+			if (obj == null) {
+				return obj
+			} else {
+				return toStr(obj) === type
+			}
+		}
+	}
+
+	var isObj = isType('Object')
+	var isStr = isType('String')
+	var isFn = isType('Function')
+	var isNum = isType('Number')
+	var isArr = Array.isArray || isType('Array')
+
+	//简洁实现，为性能计
+	var each = Object.keys && arrProto.forEach ? function(obj, callback) {
+		if (isArr(obj)) {
+			obj.forEach(callback)
+		} else if (isObj(obj)) {
+			Object.keys(obj).forEach(function(key) {
+				callback(obj[key], key)
+			})
+		}
+	} : function(obj, callback) {
+		if (isArr(obj)) {
+			for (var i = 0, len = obj.length; i < len; i += 1) {
+				callback(obj[i], i)
+			}
+		} else if (isObj(obj)) {
+			for (var key in obj) {
+				if (hasOwn(obj, key)) {
+					callback(obj[key], key)
+				}
+			}
+		}
+		return obj
+	}
+
+	//「面向过程对象」：函数是代码片段，包含一个特定过程，它也可以被视为一种对象
+	//将函数参数保存在对象的属性中，将函数体放在done方法中
+	//用法：
+	//1）新增一个ParseChain过程对象，var parseChain = new ParseChain('a.b.c')
+	//2）调用过程对象的done方法，parseChain.done() => ['a', 'b', 'c']
+	function ParseChain(chain, separator) {
+		this.chain = chain
+		this.separator = separator
+	}
+
+	ParseChain.prototype.done = function() {
+		var chain = this.chain
+		var separator = this.separator
+		if (isArr(chain)) {
+			return chain
+		} else if (isStr(chain)) {
+			return this.convert(chain).split(separator || '.')
+		} else {
+			return []
+		}
+	}
+
+	//将 'a.b.c[1][2]'转化成纯点操作符模式 = > 'a.b.c.1.2'
+	ParseChain.prototype.convert = function(chain) {
+		return chain.trim().replace(/\[\d+\]/g, function(propName) {
+			return '.' + propName.replace(/\[|\]/g, '')
+		})
+	}
+
+
+	//用法：
+	//1）新增一个GET过程对象：var get = new Get({a:1}, 'a')
+	//2)调用该过程对象的done方法，get.done() = > 1
+	function Get(obj, propChain, separator) {
+		this.obj = obj
+		this.propChain = propChain
+		this.separator = separator
+	}
+
+	Get.prototype.done = function(callback) {
+		var result = this.obj
+		var props = new ParseChain(this.propChain, this.separator).done()
+		var prop
+		if (isFn(callback)) {
+			for (var i = 0, len = props.length; i < len; i += 1) {
+				prop = props[i]
+				callback(result, prop, i)
+				result = result[prop]
+				if (result === undefined) {
+					break
+				}
+			}
+		} else {
+			for (var i = 0, len = props.length; i < len; i += 1) {
+				result = result[props[i]]
+				if (result === undefined) {
+					break
+				}
+			}
+		}
+		return result
+	}
+
+	//用法：
+	//1）新增一个Set过程对象： var obj = {a:b:{c:1}}; var set = new Set(obj, 'a.b.c', 2);
+	//2)调用过程对象的done方法：set.done() => {a:b:{c:2}}
+	function Set(obj, propChain, val) {
+		this.obj = obj
+		this.propChain = propChain
+		this.val = val
+	}
+
+	Set.prototype.done = function() {
+		var obj = this.obj
+		var propChain = this.propChain
+		var val = this.val
+
+		if (isObj(propChain)) {
+			each(propChain, function(value, chain) {
+				new Set(obj, chain, value).done()
+			})
+			return obj
+		}
+
+		var props = new ParseChain(propChain).done()
+		var len = props.length
+		if (len === 1) {
+			obj[props[0]] = val
+		} else if (len > 1) {
+			var lastIndex = len - 1
+			var propName = props[lastIndex]
+			var get = new Get(obj, props.slice(0, lastIndex))
+			var targetObj = get.done(function(currentObj, currentPropName, index) {
+				if (currentObj[currentPropName] == null) {
+					var nextPropName = props[index + 1]
+					currentObj[currentPropName] = /\D/.test(nextPropName) ? {} : []
+				}
+			})
+			targetObj[propName] = val
+		}
+
+		return obj
+	}
+
+	//用法：
+	//1）新增一个Call过程对象：var call = new Call(document, 'body.getAttribute', 'class')
+	//2)调用过程对象的done方法： call.done() == document.body.getAttribute('class')
+	function Call(obj, propChain, args, separator) {
+		this.obj = obj
+		this.propChain = propChain
+		this.args = args
+		this.separator = this.separator
+	}
+
+	Call.prototype.done = function() {
+		var obj = this.obj
+		var propChain = this.propChain
+		var args = this.args
+
+		if (isObj(propChain)) {
+			each(propChain, function(args, chain) {
+				new Call(obj, chain, args).done()
+			})
+			return
+		}
+
+		var props = new ParseChain(propChain, this.separator).done()
+		var len = props.length
+		var method = new Get(obj, props).done()
+		if (!isFn(method)) {
+			return
+		}
+		obj = new Get(obj, props.slice(0, len - 1)).done()
+
+		return method.apply(obj, isArr(args) ? args : [args])
+
+	}
+
+	//将链式调用变成配置模式
+	//$elem.css(styleObj).attr('href', url).animate(obj) => $elem.invoke({css:styleObj,attr:['href', url], animate: obj})
+	$.fn.invoke = function(propChain, args) {
+		new Call(this, propChain, args).done()
+		return this
+	}
+
+	//检查数组的项的类型，如果是同一类型，返回true
+	//@param {array} 数组
+	//@returns {boolean} 布尔值
+	function isSimilar(arr) {
+		if (!isArr(arr)) {
+			return false
+		}
+		var len = arr.length
+		var type
+		var i
+		if (len > 1) {
+			type = toStr(arr[0])
+			for (i = len - 1; i > 0; i--) {
+				if (toStr(arr[i]) !== type) {
+					return false
+				}
+			}
+		}
+		return true
+	}
+
+	//解析形如css的指令表达式：propName1:value1;propName2:value2;
+	function Parse(describe) {
+		this.describe = describe
+	}
+
+	Parse.prototype.done = function() {
+		var describe = this.describe
+		var ret = {}
+		if (!isStr(describe)) {
+			return ret
+		}
+		var group = describe.trim().split(';')
+		each(group, function(value, i) {
+			value = value.trim().split(':')
+			if (value.length < 2) {
+				return
+			}
+			var propName = value[0].trim()
+			var propChain = value[1].trim()
+			if (propName && propChain) {
+				if (!ret[propChain]) {
+					ret[propChain] = []
+				}
+				if (ret[propChain].indexOf(propName) === -1) {
+					ret[propChain].push(propName)
+				}
+			}
+		})
+		return ret
+	}
+
+	function DirectiveItem($elem, propList) {
+		this.$elem = $elem
+		this.propList = propList
+	}
+
+	//组织元素与指令为特定结构
+	function Combine() {
+		this.view = {}
+	}
+
+	Combine.prototype.done = function($elem, $directive) {
+		var view = this.view
+		each($directive, function(propList, propChain) {
+			var $item = view[propChain]
+			if (!isArr($item)) {
+				$item = view[propChain] = []
+			}
+			$item.push(new DirectiveItem($elem, propList))
+		})
+	}
+
+	//分析元素的指令并收集与组织
+	function Collect(combine, $elem, directiveName) {
+		this.combine = combine
+		this.$elem = $elem
+		this.directiveName = directiveName
+	}
+
+	Collect.prototype.done = function() {
+		var parse = new Parse(this.$elem.attr(this.directiveName))
+		this.combine.done(this.$elem, parse.done())
+	}
+
+
+	//根据特定指令名与作用域，扫描出特定结构的viewModel对象
+	function Scan($scope, directiveName, ignoreScope) {
+		this.$scope = $scope
+		this.directiveName = directiveName
+		this.ignoreScope = ignoreScope
+	}
+
+	Scan.prototype.done = function() {
+		var $scope = this.$scope
+		var $frag = $(document.createElement('div'))
+		$frag.append($scope.children())
+		var directiveName = this.directiveName
+		var selector = '[' + directiveName + ']'
+		var filter = '[noscan] ' + selector
+		var $elems = $frag.find(selector)
+		var $noScanElems = $frag.find(filter)
+		$scope.append($frag.children())
+		$frag = null
+		if ($noScanElems.length) {
+			//Zepto的$.fn.not方法，对选择器的处理性能奇差；用$()包装起来，效果更优
+			$elems = $elems.not($noScanElems)
+		}
+		var combine = new Combine()
+		if (!this.ignoreScope) {
+			new Collect(combine, $scope, directiveName).done()
+		}
+		$elems.each(function() {
+			new Collect(combine, $(this), directiveName).done()
+		})
+		return {
+			$scope: $scope,
+			view: combine.view
+		}
+	}
+
+	//扫描视图，获取viewModel
+	$.fn.scan = function(directiveName, ignoreScope) {
+		directiveName = directiveName || $.directive.setter
+		var viewModel = new Scan(this, directiveName, ignoreScope).done()
+		return viewModel
+	}
+
+	//自我复制的元素类
+	function ElemGene(elem) {
+		this.elem = elem
+	}
+
+	//根据数量，复制元素的拷贝，如果有回调，每一份拷贝依次传入回调函数
+	ElemGene.prototype.clone = function(amount, callback) {
+		if (!isNum(amount)) {
+			return this
+		}
+		var frag = document.createDocumentFragment()
+		var elem = this.elem
+		var copy
+		if (isFn(callback)) {
+			for (var i = amount - 1; i >= 0; i--) {
+				copy = elem.cloneNode(true)
+				frag.appendChild(copy)
+				callback(copy, i)
+			}
+		} else {
+			for (var i = amount - 1; i >= 0; i--) {
+				copy = elem.cloneNode(true)
+				frag.appendChild(copy)
+			}
+		}
+
+		this.copies = frag
+		return this
+	}
+
+	//将拷贝集合，插入到基因元素的后面
+	ElemGene.prototype.insert = function() {
+		if (!this.copies) {
+			return this
+		}
+		var elem = this.elem
+		var parent = elem.parentNode
+		var next = elem.nextSibling
+		if (next) {
+			parent.insertBefore(this.copies, next)
+		} else {
+			parent.appendChild(this.copies)
+		}
+		this.copies = null
+		return
+	}
+
+	//销毁元素类
+	function Destory() {
+		this.frag = document.createDocumentFragment()
+	}
+
+	//收集需要销毁的元素
+	Destory.prototype.collect = function(elem) {
+		this.frag.appendChild(elem)
+	}
+
+	//动手销毁
+	Destory.prototype.done = function() {
+		this.frag.innerHTML = ''
+		this.frag = null
+	}
+
+	//根据viewModel，将dataModel同步到视图中
+	function Sync(viewModel, dataModel) {
+		this.viewModel = viewModel
+		this.dataModel = dataModel
+	}
+
+	Sync.prototype.done = function() {
+		var dataModel = this.dataModel
+		var viewModel = this.viewModel
+		var $scope = viewModel.$scope
+		each(viewModel.view, function(directiveList, propChain) {
+			var data = new Get(dataModel, propChain).done()
+			if (data !== undefined) {
+				new Match($scope, directiveList, data).done()
+			}
+		})
+	}
+
+	//匹配将数据更新到视图的方法系列
+	function Match($scope, directiveList, data) {
+		this.$scope = $scope
+		this.directiveList = directiveList
+		this.data = data
+	}
+
+	Match.prototype.done = function() {
+		var $scope = this.$scope
+		var directiveList = this.directiveList
+		var data = this.data
+
+		if (isSimilar(data)) {
+			if (directiveList[0].$elem.attr('norepeat') == undefined) {
+				var dataLen = data.length
+				var listLen = directiveList.length
+				if (dataLen > listLen) {
+					var propList = directiveList[0].propList
+					var elemGene = new ElemGene(directiveList[listLen - 1].$elem[0])
+					elemGene.clone(dataLen - listLen, function(copy) {
+						directiveList.push(new DirectiveItem($(copy), propList))
+					})
+					elemGene.insert()
+				} else if (dataLen < listLen) {
+					var destory = new Destory()
+					for (var i = listLen - 1; i >= dataLen; i--) {
+						destory.collect(directiveList[i].$elem[0])
+					}
+					directiveList.length = dataLen
+					destory.done()
+				}
+			}
+			each(directiveList, function(view, i) {
+				new Assign($scope, view, data[i]).done()
+			})
+		} else {
+			each(directiveList, function(view) {
+				new Assign($scope, view, data).done()
+			})
+		}
+	}
+
+	//传递实例方法
+	function Deliver($target, $source) {
+		this.$target = $target
+		this.$source = $source
+	}
+
+	Deliver.prototype.done = function() {
+		var $target = this.$target
+		var $source = this.$source
+		var val
+		for (var key in $source) {
+			if (hasOwn($source, key)) {
+				val = $source[key]
+				if (isFn(val)) {
+					$target[key] = val
+				}
+			}
+		}
+	}
+
+	//根据view的propList，分派data的处理方式
+	function Assign($scope, view, data) {
+		this.$scope = $scope
+		this.view = view
+		this.data = data
+	}
+
+	Assign.prototype.done = function() {
+		var $scope = this.$scope
+		var data = this.data
+		var view = this.view
+		var $elem = view.$elem
+		var elem = $elem[0]
+		var propList = view.propList
+
+		each(propList, function(propName) {
+			propName = propName.split('-')
+			var part1 = propName[0]
+			var part2 = propName.slice(1)
+			var prop = new Get($scope, part1).done()
+
+			//先查$scope及其原型链，注：$.fn为其原型之一
+			if (isFn(prop)) {
+				if (part1 === 'refresh' || part1 === 'vm') {
+					new Deliver($elem, $scope).done()
+				}
+				prop.apply($elem, part2.concat(data))
+			} else {
+
+				//再查原生elem的原型链
+				prop = new Get(elem, part1).done()
+				if (isFn(prop)) {
+					prop.apply(elem, part2.concat(data))
+				} else {
+
+					//全部都不是的时候，当做设置属性处理
+					new Set(elem, part1, data).done()
+				}
+			}
+		})
+	}
+
+	//备用的指令名称
+	$.directive = {
+		getter: 'data-bind',
+		setter: 'data-bind'
+	}
+
+
+	//扫描视图模型并更新视图数据
+	$.fn.refresh = function(dataModel, directiveName) {
+		if (this.length !== 1 || !isObj(dataModel)) {
+			return this
+		}
+
+		//刷新视图时，扫描自身的指令；获取视图数据时，不扫描
+		var viewModel = $.fn.scan.call(this, directiveName || $.directive.setter)
+		new Sync(viewModel, dataModel).done()
+		return this
+	}
+
+	//根据视图模型，萃取数据
+	function Extract(viewModel) {
+		this.viewModel = viewModel
+	}
+
+	Extract.prototype.done = function() {
+		var that = this
+		var result = {}
+		each(this.viewModel.view, function(itemList, propChain) {
+			var data = that.get(itemList)
+			if (data !== undefined) {
+				new Set(result, propChain, data).done()
+			}
+		})
+		return result
+	}
+
+	Extract.prototype.get = function(itemList) {
+		var viewModel = this.viewModel
+		var view = viewModel.view
+		var $scope = viewModel.$scope
+		var result = []
+		each(itemList, function(item) {
+			var $elem = item.$elem
+			var propName = item.propList[0]
+			propName = propName.split('-')
+			var part1 = propName[0]
+			var part2 = propName.slice(1)
+			var prop = new Get($scope, part1).done()
+			var ret
+			if (isFn(prop)) {
+				ret = prop.apply($elem, part2)
+
+				//不收集返回的this值
+				ret = ret !== $elem ? ret : undefined
+			} else {
+				var elem = $elem[0]
+				prop = new Get(elem, part1).done()
+				if (isFn(prop)) {
+					ret = prop.apply(elem, part2)
+				} else {
+					ret = prop
+				}
+			}
+
+			//不收集undefined
+			if (ret !== undefined) {
+				result.push(ret)
+			}
+		})
+		return result.length > 1 ? result : result[0]
+	}
+
+	//收集视图中的数据，根据source指定要收集的数据及其数据结构
+	$.fn.collect = function(source, directiveName) {
+		var viewModel = $.fn.scan.call(this, directiveName || $.directive.getter, true)
+		if (isObj(source)) {
+			var oldView = viewModel.view
+			var newView = {}
+			each(source, function(newPropChian, oldPropChain) {
+				if (hasOwn(oldView, oldPropChain)) {
+					newView[newPropChian] = oldView[oldPropChain]
+				}
+			})
+			viewModel.view = newView
+		}
+		return new Extract(viewModel).done()
+	}
+
+	//refresh + collect => vm
+	$.fn.vm = function(dataModel) {
+		return isObj(dataModel) ? this.refresh(dataModel) : this.collect()
+	}
+
+	$.Get = Get
+	$.Set = Set
+	$.Call = Call
+
+}(window.jQuery || window.Zepto)

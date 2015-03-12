@@ -16,23 +16,21 @@
     <body>
         <span style="color:#f00"></span>
         <table align="center" border="0">
-            <tr js="refresh: numList">
-                <td js="text: num"></td>
+            <tr data-bind="vm: numList">
+                <td data-bind="text: num"></td>
             </tr>
         </table>
 
 <!-- <script type="text/javascript" src="../vendor/jquery-1.7.2.min.js"></script> -->
 <script type="text/javascript" src="../vendor/zepto.min.js"></script>
-<script type="text/javascript" src="../vendor/refresh.js"></script>
-<!-- <script type="text/javascript" src="../../dist/jplus-debug.js"></script> -->
-<!-- <script type="text/javascript" src="http://lucifier129.github.io/jplus/vendor/jplus-debug.js"></script> -->
+<script type="text/javascript" src="../../dist/jplus.js"></script>
 <script type="text/javascript">
 (function() {
     var start = new Date()
 
         var numList = []
         var num
-        for (var i = 0; i < 5000; i++) {
+        for (var i = 0; i < 500; i++) {
             num = new Array(100)
             $.each(num, function(index, value) {
                 num[index] = i + index
