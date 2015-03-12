@@ -1,5 +1,7 @@
 /*
  * jplus
+ * Author: Jade
+ * Github:https://github.com/Lucifier129/jplus
  */
 ! function($, undefined) {
 
