@@ -40,6 +40,7 @@
 	var toStr = calling(objProto.toString)
 	var hasOwn = calling(objProto.hasOwnProperty)
 	var slice = calling(arrProto.slice)
+	var indexOf = calling(arrProto.indexOf)
 
 	//返回一个检测输入的obj是否符合特定数据类型的函数
 	function isType(type) {
@@ -313,31 +314,41 @@
 		this.combine.done(this.$elem, parse.done())
 	}
 
-
 	//根据特定指令名与作用域，扫描出特定结构的viewModel对象
-	function Scan($scope, directiveName, ignoreScope) {
+	function Scan($scope, directiveName) {
 		this.$scope = $scope
 		this.directiveName = directiveName
-		this.ignoreScope = ignoreScope
 	}
 
 	Scan.prototype.done = function() {
 		var $scope = this.$scope
-		var $frag = $(document.createElement('div'))
-		$frag.append($scope.children())
+		var allowScan = $scope.attr('noscan') == undefined
+		if (!allowScan) {
+			$scope.removeAttr('noscan')
+		}
 		var directiveName = this.directiveName
 		var selector = '[' + directiveName + ']'
 		var filter = '[noscan] ' + selector
-		var $elems = $frag.find(selector)
-		var $noScanElems = $frag.find(filter)
-		$scope.append($frag.children())
-		$frag = null
-		if ($noScanElems.length) {
-			//Zepto的$.fn.not方法，对选择器的处理性能奇差；用$()包装起来，效果更优
-			$elems = $elems.not($noScanElems)
+		var $noScanElems = $scope.find(filter)
+		var directiveCache = []
+		//Zepto的$.fn.not性能堪忧，不如先删除属性，躲过属性选择器，再添加回去
+		$noScanElems.each(function() {
+			var $this = $(this)
+			directiveCache.push($this.attr(directiveName))
+			$this.removeAttr(directiveName)
+		})
+		var $elems = $scope.find(selector)
+		each(directiveCache, function(directive, i) {
+			$($noScanElems[i]).attr(directiveName, directive)
+		})
+
+		if (!allowScan) {
+			$scope.attr('noscan', '')
 		}
 		var combine = new Combine()
-		if (!this.ignoreScope) {
+		var index = indexOf($elems, $scope[0])
+		//$scope 有可能存在于 $elems 中，因为Zepto的$.fn.find用的是querySelectorAll，没有处理是从自身开始查询的
+		if (index === -1) {
 			new Collect(combine, $scope, directiveName).done()
 		}
 		$elems.each(function() {
@@ -513,6 +524,7 @@
 		var $elem = view.$elem
 		var elem = $elem[0]
 		var propList = view.propList
+		var hasDeliver
 
 		each(propList, function(propName) {
 			propName = propName.split('-')
@@ -522,8 +534,9 @@
 
 			//先查$scope及其原型链，注：$.fn为其原型之一
 			if (isFn(prop)) {
-				if (part1 === 'refresh' || part1 === 'vm') {
+				if ((part1 === 'refresh' || part1 === 'vm') && !hasDeliver) {
 					new Deliver($elem, $scope).done()
+					hasDeliver = true
 				}
 				prop.apply($elem, part2.concat(data))
 			} else {
@@ -555,7 +568,7 @@
 		}
 
 		//刷新视图时，扫描自身的指令；获取视图数据时，不扫描
-		var viewModel = $.fn.scan.call(this, directiveName || $.directive.setter)
+		var viewModel = this.scan(directiveName || $.directive.setter)
 		new Sync(viewModel, dataModel).done()
 		return this
 	}
@@ -568,35 +581,51 @@
 	Extract.prototype.done = function() {
 		var that = this
 		var result = {}
+		var hasValue
 		each(this.viewModel.view, function(itemList, propChain) {
 			var data = that.get(itemList)
 			if (data !== undefined) {
 				new Set(result, propChain, data).done()
+				hasValue = true
 			}
 		})
-		return result
+		if (hasValue) {
+			return result
+		}
 	}
 
 	Extract.prototype.get = function(itemList) {
 		var viewModel = this.viewModel
 		var view = viewModel.view
 		var $scope = viewModel.$scope
+		var scope = $scope[0]
 		var result = []
+
 		each(itemList, function(item) {
 			var $elem = item.$elem
+			var elem = $elem[0]
 			var propName = item.propList[0]
 			propName = propName.split('-')
 			var part1 = propName[0]
 			var part2 = propName.slice(1)
 			var prop = new Get($scope, part1).done()
+			var hasDeliver
 			var ret
 			if (isFn(prop)) {
+				if (part1 === 'refresh' || part1 === 'vm') {
+					if (elem === scope) {
+						return
+					}
+					if (!hasDeliver) {
+						new Deliver($elem, $scope).done()
+						hasDeliver = true
+					}
+				}
 				ret = prop.apply($elem, part2)
 
 				//不收集返回的this值
 				ret = ret !== $elem ? ret : undefined
 			} else {
-				var elem = $elem[0]
 				prop = new Get(elem, part1).done()
 				if (isFn(prop)) {
 					ret = prop.apply(elem, part2)
@@ -621,7 +650,8 @@
 			source = null
 		}
 
-		var viewModel = $.fn.scan.call(this, directiveName || $.directive.getter, true)
+		var viewModel = this.scan(directiveName || $.directive.getter)
+
 		if (isObj(source)) {
 			var oldView = viewModel.view
 			var newView = {}
@@ -632,6 +662,7 @@
 			})
 			viewModel.view = newView
 		}
+
 		return new Extract(viewModel).done()
 	}
 

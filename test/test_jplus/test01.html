@@ -26,11 +26,53 @@
             </div>
         </div>
 
+        <div id="test02" data-bind="vm:data;">
+            <div data-bind="vm:dataList; attr-a:a" noscan>
+                <p data-bind="b:b;c:c"></p>
+            </div>
+        </div>
+
 <!-- <script type="text/javascript" src="../vendor/zepto.min.js"></script> -->
 <script type="text/javascript" src="../vendor/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="../../dist/jplus.js"></script>
 <script type="text/javascript">
 $(function() {
+
+    var $test02 = $('#test02')
+
+    $test02.b = function(b) {
+        if (b) {
+            this.text(b + ' the b')
+        } else {
+            return this.text()
+        }
+    }
+
+    $test02.c = function(c) {
+        if (c) {
+            this.attr('c', c + ' the c')
+        } else {
+            return this.attr('c')
+        }
+    }
+
+    $test02.vm({
+        data: {
+            dataList: {
+                a: 'a_01',
+                b: 'b_02',
+                c: 'c_03'
+            }
+        }
+    })
+
+    console.log($test02.collect())
+
+
+
+
+
+
     var $container = $('#container')
     var source = {
         header: '测试zepto',
