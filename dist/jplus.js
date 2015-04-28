@@ -8,7 +8,6 @@
 	//base
 	var objProto = Object.prototype
 	var arrProto = Array.prototype
-	var call = Function.prototype.call
 
 	if (!arrProto.indexOf) {
 		arrProto.indexOf = function(value) {
@@ -31,16 +30,16 @@
 	//反柯里化
 	//接受一个函数
 	//返回一个函数：1）首个参数作为原函数的this；2）其余参数传入原函数
-	function calling(fn) {
+	function unCurring(fn) {
 		return function() {
-			return call.apply(fn, arguments)
+			return Function.prototype.call.apply(fn, arguments)
 		}
 	}
 
-	var toStr = calling(objProto.toString)
-	var hasOwn = calling(objProto.hasOwnProperty)
-	var slice = calling(arrProto.slice)
-	var indexOf = calling(arrProto.indexOf)
+	var toStr = unCurring(objProto.toString)
+	var hasOwn = unCurring(objProto.hasOwnProperty)
+	var slice = unCurring(arrProto.slice)
+	var indexOf = unCurring(arrProto.indexOf)
 
 	//返回一个检测输入的obj是否符合特定数据类型的函数
 	function isType(type) {
@@ -60,16 +59,8 @@
 	var isNum = isType('Number')
 	var isArr = Array.isArray || isType('Array')
 
-	//简洁实现，为性能计
-	var each = Object.keys && arrProto.forEach ? function(obj, callback) {
-		if (isArr(obj)) {
-			obj.forEach(callback)
-		} else if (isObj(obj)) {
-			Object.keys(obj).forEach(function(key) {
-				callback(obj[key], key)
-			})
-		}
-	} : function(obj, callback) {
+	//简洁实现
+	var each = function(obj, callback) {
 		if (isArr(obj)) {
 			for (var i = 0, len = obj.length; i < len; i += 1) {
 				callback(obj[i], i)
@@ -534,6 +525,11 @@
 
 			//先查$scope及其原型链，注：$.fn为其原型之一
 			if (isFn(prop)) {
+				var dataCache = new DataCache($elem, data, part1)
+				//字符串或数值类型的数据，如果跟上一次传入同名方法的一致，则忽略
+				if (dataCache.isEqual()) {
+					return
+				}
 				if ((part1 === 'refresh' || part1 === 'vm') && !hasDeliver) {
 					new Deliver($elem, $scope).done()
 					hasDeliver = true
@@ -553,6 +549,32 @@
 			}
 		})
 	}
+
+	function DataCache($elem, data, methodName) {
+		this.$elem = $elem
+		this.data = data
+		this.methodName = this.prefix + methodName
+	}
+
+	DataCache.prototype = {
+		prefix: 'jplus_',
+		isEqual: function() {
+			var $elem = this.$elem
+			var data = this.data
+			//只考察和缓存string|number类型的数据，其余的当做不相等
+			//约能覆盖80%的使用场景
+			if (isStr(data) || isNum(data)) {
+				var oldData = $elem.data(this.methodName)
+				var isEqual = oldData === data
+				if (!isEqual) {
+					$elem.data(this.methodName, data)
+				}
+				return isEqual
+			}
+			return false
+		}
+	}
+
 
 	//备用的指令名称
 	$.directive = {
